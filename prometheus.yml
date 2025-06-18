@@ -1,0 +1,18 @@
+global:
+  scrape_interval: 15s     # More frequent collection
+  scrape_timeout: 10s      # Shorter timeout to fail fast
+  evaluation_interval: 15s  # How frequently to evaluate rules
+
+scrape_configs:
+  - job_name: 'mikrotik_sfp'
+    scrape_interval: 15s   # Override the global interval
+    scrape_timeout: 10s    # Override the global timeout
+    static_configs:
+      - targets: ['localhost:9700']
+    metrics_path: '/metrics'
+    scheme: 'http'
+    honor_labels: true     # Keep instance labels from exporter
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'mikrotik_sfp' 

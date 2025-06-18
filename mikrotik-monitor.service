@@ -1,0 +1,16 @@
+[Unit]
+Description=Mikrotik SFP Monitoring Service
+After=network.target
+
+[Service]
+Type=simple
+User=robert
+Group=robert
+WorkingDirectory=/home/robert/Development/script-sfp-tik-monitor
+Environment=PATH=/home/robert/Development/script-sfp-tik-monitor/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/home/robert/Development/script-sfp-tik-monitor/venv/bin/python3 monitor.py
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target 

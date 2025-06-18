@@ -1,0 +1,4 @@
+2025-06-17 19:22:34,224 - INFO - Prometheus metrics server started on port 9110
+2025-06-17 19:22:34,225 - ERROR - Error collecting metrics: No connection adapters were found for 'apis://rt1.home.doemijdienamespacemaar.nl/interface/ethernet/sfp-sfpplus1/monitor'
+2025-06-17 19:23:04,225 - ERROR - Error collecting metrics: No connection adapters were found for 'apis://rt1.home.doemijdienamespacemaar.nl/interface/ethernet/sfp-sfpplus1/monitor'
+2025-06-17 19:23:34,226 - ERROR - Error collecting metrics: No connection adapters were found for 'apis://rt1.home.doemijdienamespacemaar.nl/interface/ethernet/sfp-sfpplus1/monitor'
