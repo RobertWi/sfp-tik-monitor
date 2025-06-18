@@ -50,12 +50,21 @@ interface_link_downs = Counter('mikrotik_interface_link_downs_total', 'Total num
 # Interface metrics
 interface_rx_bytes = Gauge('mikrotik_interface_rx_bytes_total', 'Total received bytes', ['interface'])
 interface_tx_bytes = Gauge('mikrotik_interface_tx_bytes_total', 'Total transmitted bytes', ['interface'])
+interface_rx_packets = Counter('mikrotik_interface_rx_packets_total', 'Total received packets', ['interface'])
+interface_tx_packets = Counter('mikrotik_interface_tx_packets_total', 'Total transmitted packets', ['interface'])
 
-# Error metrics
-sfp_rx_errors = Counter('mikrotik_sfp_rx_error_events_total', 'Total receive errors', ['interface'])
-sfp_tx_errors = Counter('mikrotik_sfp_tx_error_events_total', 'Total transmit errors', ['interface'])
-sfp_rx_drops = Counter('mikrotik_sfp_rx_drops_total', 'Total receive drops', ['interface'])
-sfp_tx_drops = Counter('mikrotik_sfp_tx_drops_total', 'Total transmit drops', ['interface'])
+# Error metrics (for both interfaces)
+interface_rx_errors = Counter('mikrotik_interface_rx_errors_total', 'Total receive errors', ['interface'])
+interface_tx_errors = Counter('mikrotik_interface_tx_errors_total', 'Total transmit errors', ['interface'])
+interface_rx_drops = Counter('mikrotik_interface_rx_drops_total', 'Total receive drops', ['interface'])
+interface_tx_drops = Counter('mikrotik_interface_tx_drops_total', 'Total transmit drops', ['interface'])
+interface_tx_queue_drops = Counter('mikrotik_interface_tx_queue_drops_total', 'Total transmit queue drops', ['interface'])
+
+# FastPath metrics
+interface_fp_rx_bytes = Counter('mikrotik_interface_fp_rx_bytes_total', 'FastPath total received bytes', ['interface'])
+interface_fp_tx_bytes = Counter('mikrotik_interface_fp_tx_bytes_total', 'FastPath total transmitted bytes', ['interface'])
+interface_fp_rx_packets = Counter('mikrotik_interface_fp_rx_packets_total', 'FastPath total received packets', ['interface'])
+interface_fp_tx_packets = Counter('mikrotik_interface_fp_tx_packets_total', 'FastPath total transmitted packets', ['interface'])
 
 def make_request(endpoint, method='GET', data=None):
     """Make an API request with optional POST data"""
@@ -105,7 +114,6 @@ def collect_metrics():
         if 'link-downs' in iface:
             try:
                 link_downs = float(iface['link-downs'])
-                # Set the counter to the absolute value from router
                 interface_link_downs.labels(interface=name)._value.set(link_downs)
             except (ValueError, TypeError) as e:
                 logging.error(f"Error converting link-downs value for {name}: {e}")
@@ -115,16 +123,32 @@ def collect_metrics():
             interface_rx_bytes.labels(interface=name).set(float(iface['rx-byte']))
         if 'tx-byte' in iface:
             interface_tx_bytes.labels(interface=name).set(float(iface['tx-byte']))
+        if 'rx-packet' in iface:
+            interface_rx_packets.labels(interface=name)._value.set(float(iface['rx-packet']))
+        if 'tx-packet' in iface:
+            interface_tx_packets.labels(interface=name)._value.set(float(iface['tx-packet']))
         
         # Update error counters
         if 'rx-error' in iface:
-            sfp_rx_errors.labels(interface=name).inc(float(iface['rx-error']))
+            interface_rx_errors.labels(interface=name)._value.set(float(iface['rx-error']))
         if 'tx-error' in iface:
-            sfp_tx_errors.labels(interface=name).inc(float(iface['tx-error']))
+            interface_tx_errors.labels(interface=name)._value.set(float(iface['tx-error']))
         if 'rx-drop' in iface:
-            sfp_rx_drops.labels(interface=name).inc(float(iface['rx-drop']))
+            interface_rx_drops.labels(interface=name)._value.set(float(iface['rx-drop']))
         if 'tx-drop' in iface:
-            sfp_tx_drops.labels(interface=name).inc(float(iface['tx-drop']))
+            interface_tx_drops.labels(interface=name)._value.set(float(iface['tx-drop']))
+        if 'tx-queue-drop' in iface:
+            interface_tx_queue_drops.labels(interface=name)._value.set(float(iface['tx-queue-drop']))
+            
+        # Update FastPath counters
+        if 'fp-rx-byte' in iface:
+            interface_fp_rx_bytes.labels(interface=name)._value.set(float(iface['fp-rx-byte']))
+        if 'fp-tx-byte' in iface:
+            interface_fp_tx_bytes.labels(interface=name)._value.set(float(iface['fp-tx-byte']))
+        if 'fp-rx-packet' in iface:
+            interface_fp_rx_packets.labels(interface=name)._value.set(float(iface['fp-rx-packet']))
+        if 'fp-tx-packet' in iface:
+            interface_fp_tx_packets.labels(interface=name)._value.set(float(iface['fp-tx-packet']))
         
         # Get SFP data for sfp-sfpplus1
         if name == 'sfp-sfpplus1':
