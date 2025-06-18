@@ -45,6 +45,7 @@ sfp_temperature = Gauge('mikrotik_sfp_temperature', 'SFP temperature in Celsius'
 sfp_voltage = Gauge('mikrotik_sfp_voltage', 'SFP supply voltage in Volts', ['interface'])
 sfp_tx_bias = Gauge('mikrotik_sfp_tx_bias_current', 'SFP TX bias current in mA', ['interface'])
 sfp_link_status = Gauge('mikrotik_sfp_link_status', 'SFP link status (1=UP, 2=DOWN)', ['interface'])
+interface_link_downs = Counter('mikrotik_interface_link_downs_total', 'Total number of times the link went down', ['interface'])
 
 # Interface metrics
 interface_rx_bytes = Gauge('mikrotik_interface_rx_bytes_total', 'Total received bytes', ['interface'])
@@ -96,9 +97,18 @@ def collect_metrics():
         logging.info(f"Processing interface: {name}")
         iface_id = iface.get('.id', '')
         
-        # Update link status
+        # Update link status and link downs
         running = iface.get('running', False)
         sfp_link_status.labels(interface=name).set(1 if running else 2)
+        
+        # Update link down counter
+        if 'link-downs' in iface:
+            try:
+                link_downs = float(iface['link-downs'])
+                # Set the counter to the absolute value from router
+                interface_link_downs.labels(interface=name)._value.set(link_downs)
+            except (ValueError, TypeError) as e:
+                logging.error(f"Error converting link-downs value for {name}: {e}")
         
         # Update basic interface stats
         if 'rx-byte' in iface:
