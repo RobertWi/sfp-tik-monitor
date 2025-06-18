@@ -1,69 +1,136 @@
-# Mikrotik SFP Monitor
+# Mikrotik SFP and PON Monitor
 
-This script monitors SFP metrics from a Mikrotik router and exports them to Prometheus.
+This script monitors SFP and PON (Passive Optical Network) metrics from a Mikrotik router with Zaram XGSPON SFP module and exports them to Prometheus.
 
 ## Features
 
-- Monitors SFP metrics (RX power, TX power, temperature, voltage)
-- Uses Mikrotik API over SSL
-- Exports metrics in Prometheus format
-- Secure credential storage using `pass`
+### SFP Monitoring
+- **Signal Metrics**: RX/TX power levels, temperature, and voltage
+- **Link Status**: Real-time monitoring of SFP link state
+- **Error Tracking**: FCS errors, frame drops, and buffer overflows
 
-## Requirements
+### PON Monitoring
+- **SerDes State**: Detailed PON link state information
+- **FEC Statistics**: Forward Error Correction metrics
+- **Performance Metrics**: Detailed optical performance data
 
-- Python 3.x
-- `pass` for credential storage
-- Virtual environment
-- Required Python packages (see requirements.txt)
+### Integration
+- **Prometheus Export**: All metrics available in Prometheus format
+- **Grafana Dashboard**: Pre-configured for immediate visualization
+- **Secure Storage**: Credentials managed via `pass` password manager
 
-## Setup
+## Quick Start
 
-1. Create and activate virtual environment:
+### Prerequisites
+- Linux server (tested on Ubuntu 22.04+)
+- Python 3.8+
+- `pass` password manager
+- Mikrotik router with Zaram XGSPON SFP module
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://your-repository-url/script-sfp-tik-monitor.git
+   cd script-sfp-tik-monitor
+   ```
+
+2. **Set up Python environment**
    ```bash
    python3 -m venv venv
    source venv/bin/activate
-   ```
-
-2. Install dependencies:
-   ```bash
    pip install -r requirements.txt
    ```
 
-3. Store API credentials in pass:
+3. **Configure credentials**
    ```bash
+   # Store Mikrotik API credentials
    pass insert mikrotik/rt1/api-monitor/api-monitoring
+   
+   # Store SFP module credentials
+   pass insert zaram/sfp/admin
    ```
 
-4. Install systemd service:
+4. **Configure systemd service**
    ```bash
-   sudo cp mikrotik-monitor.service /etc/systemd/system/
+   sudo cp sfp-monitor.service /etc/systemd/system/
    sudo systemctl daemon-reload
-   sudo systemctl enable mikrotik-monitor
-   sudo systemctl start mikrotik-monitor
-   ```
-
-5. Add to Prometheus config:
-   ```yaml
-   scrape_configs:
-     - job_name: 'mikrotik_sfp'
-       static_configs:
-         - targets: ['localhost:9100']
+   sudo systemctl enable --now sfp-monitor
    ```
 
 ## Metrics
 
-The following metrics are exported:
-- mikrotik_sfp_rx_power
-- mikrotik_sfp_tx_power
-- mikrotik_sfp_temperature
-- mikrotik_sfp_voltage
+### SFP Metrics
+| Metric | Description | Unit |
+|--------|-------------|------|
+| `mikrotik_sfp_rx_power` | Received optical power | dBm |
+| `mikrotik_sfp_tx_power` | Transmitted optical power | dBm |
+| `mikrotik_sfp_temperature` | Module temperature | °C |
+| `mikrotik_sfp_voltage` | Supply voltage | V |
+
+### PON Metrics
+| Metric | Description |
+|--------|-------------|
+| `mikrotik_pon_serdes_state` | Current SerDes state (hex) |
+| `mikrotik_pon_link_status` | PON link status (1=UP, 0=DOWN) |
+| `mikrotik_pon_fec_corrected_bytes` | Bytes corrected by FEC |
+- `mikrotik_sfp_rx_fcs_error_total` - Frames with FCS errors
+- `mikrotik_sfp_rx_fragment_total` - Frames smaller than minimum size with bad FCS
+- `mikrotik_sfp_rx_overflow_total` - Frames dropped due to buffer overflow
+- `mikrotik_sfp_tx_fcs_error_total` - Frames transmitted with FCS errors
 
 ## Prerequisites
 
 - Linux server (tested on Ubuntu)
 - Python 3.8 or higher
 - Access to Mikrotik router with API enabled
+- Zaram XGSPON SFP module installed
+- `pass` password manager installed and configured
 - User account with sudo privileges
+
+## Grafana Dashboard
+
+A pre-configured Grafana dashboard is included in `sfp-monitor-dashboard.json`. Import this into your Grafana instance to visualize the collected metrics.
+
+### Dashboard Features
+- Real-time monitoring of SFP and PON metrics
+- Historical data visualization
+- Link status and error rate tracking
+- Temperature and voltage monitoring
+- FEC statistics and error rates
+
+## Security
+
+This script uses `pass` for secure credential management. No sensitive information is stored in plaintext. The following credentials are required:
+
+1. Mikrotik API credentials (stored in `mikrotik/rt1/api-monitor/api-monitoring`)
+2. SFP module telnet credentials (stored in `zaram/sfp/admin`)
+
+### Required Password Store Structure
+```
+Password Store
+├── mikrotik
+│   └── rt1
+│       └── api-monitor
+│           └── api-monitoring
+└── zaram
+    └── sfp
+        └── admin
+```
+
+## Troubleshooting
+
+### Common Issues
+1. **Connection Refused**: Ensure the SFP module's telnet interface is enabled and accessible
+2. **Authentication Failed**: Verify credentials in the password store
+3. **No Data**: Check if the SFP module is properly seated and recognized by the router
+
+### Logs
+Logs are stored in the `logs/` directory with rotation (5 files, 1MB each).
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 1. Router Configuration
 

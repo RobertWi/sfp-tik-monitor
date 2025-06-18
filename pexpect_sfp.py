@@ -2,13 +2,43 @@
 import pexpect
 import sys
 import time
+import subprocess
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler()
+    ]
+)
+
+def get_sfp_password():
+    """Get SFP password from pass"""
+    try:
+        result = subprocess.run(['pass', 'zaram/sfp/admin'], 
+                              capture_output=True, text=True)
+        if result.returncode == 0:
+            return result.stdout.strip()
+        else:
+            logging.error(f"Failed to get SFP password: {result.stderr}")
+            return None
+    except Exception as e:
+        logging.error(f"Error running pass command for SFP password: {e}")
+        return None
+
+# Get SFP password
+SFP_PASSWORD = get_sfp_password()
+if not SFP_PASSWORD:
+    logging.error("Failed to get SFP password. Exiting.")
+    sys.exit(1)
 
 # Configuration
 ROUTER_IP = '192.168.33.1'
 ROUTER_USER = 'robert'
 SFP_IP = '192.168.200.1'
-SFP_USER = 'admin'
-SFP_PASS = 'zrmt123!@#'
+SFP_USER = 'admin'  # Username for SFP module telnet access
 
 def main():
     try:
@@ -38,7 +68,7 @@ def main():
             i = child.expect(['Password:', pexpect.TIMEOUT], timeout=5)
             if i == 0:  # password prompt
                 print("Sending password...")
-                child.sendline(SFP_PASS)
+                child.sendline(SFP_PASSWORD)
                 
                 # Look for command prompt
                 i = child.expect(['ZXOS11NPI', pexpect.TIMEOUT], timeout=5)

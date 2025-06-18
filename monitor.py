@@ -285,16 +285,35 @@ def get_pon_metrics(interface):
 API_PASSWORD = get_password_from_pass()
 if not API_PASSWORD:
     logging.error("Failed to get API password. Exiting.")
-    exit(1)
+    sys.exit(1)
+
+def get_sfp_password():
+    """Get SFP password from pass"""
+    try:
+        result = subprocess.run(['pass', 'zaram/sfp/admin'], 
+                              capture_output=True, text=True)
+        if result.returncode == 0:
+            return result.stdout.strip()
+        else:
+            logging.error(f"Failed to get SFP password: {result.stderr}")
+            return None
+    except Exception as e:
+        logging.error(f"Error running pass command for SFP password: {e}")
+        return None
+
+# Get SFP credentials
+SFP_PASSWORD = get_sfp_password()
+if not SFP_PASSWORD:
+    logging.error("Failed to get SFP password. Exiting.")
+    sys.exit(1)
 
 # Router SSH credentials
 ROUTER_IP = '192.168.33.1'
 ROUTER_USER = 'robert'
+# SFP module credentials
 SFP_IP = '192.168.200.1'
-SFP_USER = 'admin'
-SFP_PASS = 'zrmt123!@#'
-
-# Initialize metrics
+SFP_USER = 'admin'  # Username for SFP module telnet access
+# SFP_PASS is now retrieved from the password store
 # SFP Physical metrics
 sfp_rx_power = Gauge('mikrotik_sfp_rx_power', 'SFP RX power in dBm', ['interface'])
 sfp_tx_power = Gauge('mikrotik_sfp_tx_power', 'SFP TX power in dBm', ['interface'])
@@ -732,7 +751,7 @@ def run_sfp_command(command, timeout=10):
             return None
             
         logging.info("Sending password...")
-        child.sendline(SFP_PASS)
+        child.sendline(SFP_PASSWORD)
         
         # Look for command prompt
         i = child.expect(['ZXOS11NPI', pexpect.TIMEOUT], timeout=5)
