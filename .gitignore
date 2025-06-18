@@ -7,6 +7,15 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Log files
+logs/*.log
+*.log
+
+# Local development
+.env
+*.swp
+*~
+
 # Distribution / packaging
 .Python
 build/
