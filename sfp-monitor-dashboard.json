@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 509,
+  "id": 0,
   "links": [],
   "panels": [
     {
@@ -751,7 +751,7 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 4,
+        "w": 2,
         "x": 0,
         "y": 10
       },
@@ -844,8 +844,8 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 4,
-        "x": 4,
+        "w": 2,
+        "x": 2,
         "y": 10
       },
       "id": 4,
@@ -930,8 +930,8 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 4,
-        "x": 8,
+        "w": 2,
+        "x": 4,
         "y": 10
       },
       "id": 5,
@@ -1026,7 +1026,7 @@
       "gridPos": {
         "h": 8,
         "w": 3,
-        "x": 12,
+        "x": 6,
         "y": 10
       },
       "id": 8,
@@ -1105,27 +1105,6 @@
           "color": {
             "mode": "thresholds"
           },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "fillOpacity": 80,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineWidth": 1,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -1159,31 +1138,26 @@
       "gridPos": {
         "h": 8,
         "w": 3,
-        "x": 15,
+        "x": 9,
         "y": 10
       },
       "id": 14,
       "options": {
-        "barRadius": 0,
-        "barWidth": 0.97,
-        "fullHighlight": false,
-        "groupWidth": 0.7,
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
         "orientation": "auto",
-        "showValue": "auto",
-        "stacking": "none",
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "none"
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
         },
-        "xTickLabelRotation": 0,
-        "xTickLabelSpacing": 0
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
       "pluginVersion": "12.1.0-89869",
       "targets": [
@@ -1193,7 +1167,7 @@
             "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
-          "expr": "mikrotik_sfp_link_downs_total{interface='sfp-sfpplus1'}",
+          "expr": "mikrotik_interface_link_downs_total{interface='sfp-sfpplus1'}",
           "hide": false,
           "instant": false,
           "legendFormat": "Link Down Count",
@@ -1202,7 +1176,7 @@
         }
       ],
       "title": "SFP LinkDownCount",
-      "type": "barchart"
+      "type": "stat"
     },
     {
       "datasource": {
@@ -1262,7 +1236,7 @@
       "gridPos": {
         "h": 8,
         "w": 3,
-        "x": 18,
+        "x": 12,
         "y": 10
       },
       "id": 9,
@@ -1342,27 +1316,6 @@
           "color": {
             "mode": "thresholds"
           },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "fillOpacity": 80,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineWidth": 1,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
           "fieldMinMax": false,
           "mappings": [],
           "thresholds": {
@@ -1402,31 +1355,26 @@
       "gridPos": {
         "h": 8,
         "w": 3,
-        "x": 21,
+        "x": 15,
         "y": 10
       },
       "id": 10,
       "options": {
-        "barRadius": 0,
-        "barWidth": 0.97,
-        "fullHighlight": false,
-        "groupWidth": 0.7,
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
         "orientation": "auto",
-        "showValue": "auto",
-        "stacking": "none",
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
         },
-        "xTickLabelRotation": 0,
-        "xTickLabelSpacing": 0
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
       "pluginVersion": "12.1.0-89869",
       "targets": [
@@ -1436,7 +1384,7 @@
             "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
-          "expr": "mikrotik_sfp_link_downs_total{interface='pppoe-wan'}",
+          "expr": "mikrotik_interface_link_downs_total{interface='pppoe-wan'}",
           "hide": false,
           "instant": false,
           "legendFormat": "Link Down Count",
@@ -1445,7 +1393,159 @@
         }
       ],
       "title": "PPPoE LinkDownCount",
-      "type": "barchart"
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafanacloud-prom"
+      },
+      "description": "PON Link Status",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "red",
+                  "index": 0,
+                  "text": "DOWN"
+                },
+                "1": {
+                  "color": "green",
+                  "index": 1,
+                  "text": "UP"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": 0
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 3,
+        "x": 18,
+        "y": 10
+      },
+      "id": 30,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.1.0-89869",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafanacloud-prom"
+          },
+          "editorMode": "code",
+          "expr": "mikrotik_pon_link_status{interface='sfp-sfpplus1'}",
+          "instant": false,
+          "legendFormat": "PON Link Status",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "PON Link Status",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "grafanacloud-prom"
+      },
+      "description": "PON SerDes State Text Description",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 3,
+        "x": 21,
+        "y": 10
+      },
+      "id": 32,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.1.0-89869",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "grafanacloud-prom"
+          },
+          "editorMode": "code",
+          "expr": "mikrotik_pon_serdes_text_info{interface='sfp-sfpplus1'}",
+          "instant": false,
+          "legendFormat": "PON SerDes State",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "PON SerDes State (Text)",
+      "type": "stat"
     },
     {
       "datasource": {
@@ -1465,6 +1565,7 @@
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 10,
             "gradientMode": "none",
@@ -1496,7 +1597,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               }
             ]
           }
@@ -1573,7 +1674,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 22
+        "y": 18
       },
       "id": 34,
       "options": {
@@ -1589,11 +1690,12 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "multi",
           "sort": "none"
         }
       },
-      "pluginVersion": "10.0.0",
+      "pluginVersion": "12.1.0-89869",
       "targets": [
         {
           "datasource": {
@@ -1677,6 +1779,7 @@
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 10,
             "gradientMode": "none",
@@ -1708,7 +1811,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "red",
@@ -1739,7 +1842,7 @@
                   "steps": [
                     {
                       "color": "green",
-                      "value": null
+                      "value": 0
                     },
                     {
                       "color": "red",
@@ -1756,7 +1859,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 22
+        "y": 18
       },
       "id": 35,
       "options": {
@@ -1772,11 +1875,12 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "multi",
           "sort": "none"
         }
       },
-      "pluginVersion": "10.0.0",
+      "pluginVersion": "12.1.0-89869",
       "targets": [
         {
           "datasource": {
@@ -1811,216 +1915,6 @@
         "type": "prometheus",
         "uid": "grafanacloud-prom"
       },
-      "description": "PON Link Status",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [
-            {
-              "options": {
-                "0": {
-                  "color": "red",
-                  "index": 0,
-                  "text": "DOWN"
-                },
-                "1": {
-                  "color": "green",
-                  "index": 1,
-                  "text": "UP"
-                }
-              },
-              "type": "value"
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              },
-              {
-                "color": "green",
-                "value": 1
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 0,
-        "y": 30
-      },
-      "id": 30,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "grafanacloud-prom"
-          },
-          "editorMode": "code",
-          "expr": "mikrotik_pon_link_status{interface='sfp-sfpplus1'}",
-          "instant": false,
-          "legendFormat": "PON Link Status",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "PON Link Status",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "grafanacloud-prom"
-      },
-      "description": "PON SerDes State",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "blue",
-                "value": null
-              }
-            ]
-          },
-          "unit": "hex"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 6,
-        "y": 30
-      },
-      "id": 31,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "grafanacloud-prom"
-          },
-          "editorMode": "code",
-          "expr": "mikrotik_pon_serdes_state{interface='sfp-sfpplus1'}",
-          "instant": false,
-          "legendFormat": "PON SerDes State",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "PON SerDes State (Hex)",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "grafanacloud-prom"
-      },
-      "description": "PON SerDes State Text Description",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 12,
-        "y": 30
-      },
-      "id": 32,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "grafanacloud-prom"
-          },
-          "editorMode": "code",
-          "expr": "mikrotik_pon_serdes_text{interface='sfp-sfpplus1'}",
-          "instant": false,
-          "legendFormat": "PON SerDes State",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "PON SerDes State (Text)",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "grafanacloud-prom"
-      },
       "description": "PON FEC Statistics",
       "fieldConfig": {
         "defaults": {
@@ -2034,6 +1928,7 @@
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 10,
             "gradientMode": "none",
@@ -2065,7 +1960,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               }
             ]
           },
@@ -2077,9 +1972,9 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 34
+        "y": 26
       },
-      "id": 32,
+      "id": 39,
       "options": {
         "legend": {
           "calcs": [
@@ -2092,11 +1987,12 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "single",
           "sort": "none"
         }
       },
-      "pluginVersion": "10.0.0",
+      "pluginVersion": "12.1.0-89869",
       "targets": [
         {
           "datasource": {
@@ -2168,6 +2064,7 @@
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 10,
             "gradientMode": "none",
@@ -2199,7 +2096,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "red",
@@ -2215,7 +2112,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 34
+        "y": 26
       },
       "id": 33,
       "options": {
@@ -2230,11 +2127,12 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "single",
           "sort": "none"
         }
       },
-      "pluginVersion": "10.0.0",
+      "pluginVersion": "12.1.0-89869",
       "targets": [
         {
           "datasource": {
@@ -2266,7 +2164,7 @@
     }
   ],
   "preload": false,
-  "refresh": "10s",
+  "refresh": "30s",
   "schemaVersion": 41,
   "tags": [
     "sfp",
@@ -2297,6 +2195,7 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "SFP Monitor v0.0.29",
-  "uid": "sfp-monitor-v0-0-29",
-  "version": 29,
+  "title": "SFP Monitor v0.0.32",
+  "uid": "sfp-monitor-v0-0-32",
+  "version": 32
+}
