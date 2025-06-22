@@ -53,3 +53,12 @@ doc-zaram/
 # Terraform sensitive files
 terraform/terraform.tfvars
 *.tfvars
+
+# Terraform state and provider files
+terraform/.terraform/
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+terraform-provider-*
+terraform/.terraform.lock.hcl
