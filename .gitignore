@@ -1,0 +1,74 @@
+# Python virtual environment
+venv/
+ENV/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Log files
+logs/
+*.log
+
+# Local development
+.env
+*.swp
+*~
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment variables
+.env
+
+# Local development files
+local_settings.py
+db.sqlite3
+
+# Vendor documentation
+doc-zaram/
+
+# Terraform sensitive files
+terraform/terraform.tfvars
+*.tfvars
+
+# Terraform state and provider files - COMPREHENSIVE
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.*
+terraform/terraform-provider-*
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+terraform-provider-*
+
+# Terraform modules and providers
+**/.terraform/
+**/.terraform.lock.hcl
+**/terraform.tfstate
+**/terraform.tfstate.*
+**/terraform-provider-*

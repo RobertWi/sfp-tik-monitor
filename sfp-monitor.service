@@ -1,0 +1,13 @@
+[Unit]
+Description=Mikrotik SFP Modular Monitoring Service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/yourdevelopmentdir
+ExecStart=%h/yourdevelopmentdir/venv/bin/python main.py
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=default.target 
