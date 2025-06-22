@@ -8,7 +8,7 @@ __pycache__/
 *$py.class
 
 # Log files
-logs/*.log
+logs/
 *.log
 
 # Local development
@@ -33,11 +33,6 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-
-# Logs
-*.log
-!logs/*.log
-!sfp_monitor.log
 
 # IDE specific files
 .idea/
