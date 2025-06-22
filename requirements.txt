@@ -2,3 +2,4 @@ prometheus_client>=0.17.1
 librouteros>=3.2.0
 paramiko>=3.3.0
 pexpect>=4.8.0
+python-dotenv>=1.0.0

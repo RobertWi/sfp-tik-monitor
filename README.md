@@ -2,12 +2,55 @@
 
 This script monitors SFP and PON (Passive Optical Network) metrics from a Mikrotik router with Zaram XGSPON SFP module and exports them to Prometheus.
 
+## Use Your Own ONT with KPN XGS-PON
+
+This monitoring solution is particularly valuable for users who have chosen to use their own ONT (Optical Network Terminal) with KPN's XGS-PON network instead of the provided KPN equipment. While KPN supports using your own equipment, as documented in their [Eigen Apparatuur](https://www.kpn.com/service/eigen-apparatuur) guide, this comes with important considerations:
+
+### Support Considerations
+
+When using your own ONT, you may find yourself in situations where you need to request support from your provider due to various instability issues. Since users with their own ONT represent a niche in the Netherlands, you may be charged for support costs if the problem is determined to be on your end. This creates a challenging situation where you need to be able to prove that issues are not caused by your custom hardware.
+
+**Provider Support Limitations:**
+- **First-line support** is not always skilled to deal with custom ONT hardware as they expect standard KPN hardware to be used
+- **Second-line support** usually has better knowledge but availability depends on the specific support team
+- **Provider monitoring gaps**: KPN appears to be lacking comprehensive monitoring on their own OLT hardware to determine when issues fail on their end
+- **Evidence requirements**: Having detailed metrics from your own monitoring becomes crucial to demonstrate that issues are not on your end
+- **Support costs**: You may be charged for support calls if the provider determines the issue is with your equipment
+- **Limited provider visibility**: KPN's monitoring systems may not provide sufficient detail about OLT-side issues
+
+### Why Monitoring is Critical
+
+To maintain better control and provide evidence when issues arise, this solution collects a comprehensive set of metrics focusing on:
+
+- **SFP-SFPPPlus1 Interface**: Detailed monitoring of the SFP module's optical performance
+- **PPPoE-WAN Interface**: Connection stability and performance metrics
+- **Zaram XGS-PON SFP+ ONT**: Direct access to the ONT module for detailed diagnostics
+- **OLT Side Insights**: Basic information about the provider's Optical Line Terminal
+
+### Community Support
+
+For users with their own ONT, the [Tweakers community](https://gathering.tweakers.net/forum/list_messages/2210482/0) has been invaluable. KPN employees have also contributed to discussions and assisted in connecting with vendors to make SFP modules ready (firmware) for KPN use. This is particularly important because specific requirements from the provider may not suit every XGS-PON SFP ONT module available on the market.
+
+### Key Benefits
+
+- **Proactive Monitoring**: Detect issues before they become critical
+- **Evidence Collection**: Provide detailed metrics when contacting support - you can share a Grafana Cloud dashboard to share insights
+- **Performance Optimization**: Identify and resolve performance bottlenecks
+- **Cost Avoidance**: Demonstrate that issues are not on your end
+- **Support Documentation**: Provide concrete data to support teams who may lack experience with custom ONT hardware
+
 ## Features
 
 ### SFP Monitoring
-- **Signal Metrics**: RX/TX power levels, temperature, and voltage
-- **Link Status**: Real-time monitoring of SFP link state
-- **Error Tracking**: FCS errors, frame drops, and buffer overflows
+- **Signal Metrics**: RX/TX power levels, temperature, voltage, and bias current
+- **Link Status**: Real-time monitoring of SFP link state and data freshness
+- **Error Tracking**: Comprehensive SFP error statistics including:
+  - FCS errors (RX/TX)
+  - Collision errors (late, excessive)
+  - Frame size errors (too short, too long, jabber)
+  - Alignment and fragment errors
+  - Buffer overflows and underruns
+  - Deferred transmissions
 
 ### PON Monitoring
 - **SerDes State**: Detailed PON link state information
@@ -16,7 +59,7 @@ This script monitors SFP and PON (Passive Optical Network) metrics from a Mikrot
 
 ### Integration
 - **Prometheus Export**: All metrics available in Prometheus format
-- **Grafana Dashboard**: Pre-configured for immediate visualization
+- **Grafana Dashboard**: Pre-configured for immediate visualization with no-hassle Terraform installation
 - **Secure Storage**: Credentials managed via `pass` password manager
 
 ## Quick Start
@@ -29,96 +72,294 @@ This script monitors SFP and PON (Passive Optical Network) metrics from a Mikrot
 
 ### Installation
 
-1. **Clone the repository**
+## 1. Installation
+
+### 1.1 Router Configuration
+
+#### Enable API on RouterOS
+```
+/ip service
+set api disabled=no
+```
+
+#### Create API User RouterOS
+```
+/user group
+add name=api-monitoring policy=read,api,rest-api,!write
+
+/user
+add name=api-monitor group=api-monitoring password="secure_password"
+```
+
+#### Configure SSH Key Authentication
+For secure SSH access to the router (required to then use telnet from RouterOS to SFP module), set up SSH key authentication:
+
+**RouterOS UI Method (Alternative):**
+1. Open RouterOS WebFig or WinBox
+2. Navigate to **System** → **Users**
+3. Select the user (e.g., `youruser`)
+4. Go to the **SSH Keys** tab
+5. Click **+** to add a new SSH key
+6. Paste the public key content from your SSH key file (e.g., `~/.ssh/id_rsa.pub` or `~/.ssh/id_ed25519.pub`)
+7. Click **OK** to save
+
+### 1.2 Environment Configuration
+
+1. **Copy the example environment file:**
    ```bash
-   git clone https://your-repository-url/script-sfp-tik-monitor.git
-   cd script-sfp-tik-monitor
+   cp .env.example .env
    ```
 
-2. **Set up Python environment**
+2. **Edit the environment configuration:**
    ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
+   vi .env
    ```
 
-3. **Configure credentials**
+   Update the following variables with your specific values:
    ```bash
-   # Store Mikrotik API credentials
-   pass insert mikrotik/rt1/api-monitor/api-monitoring
+   # Router configuration
+   ROUTER_HOST=your-router-ip
+   ROUTER_USER=your-router-user
    
-   # Store SFP module credentials
-   pass insert zaram/sfp/admin
+   # Zaram SFP telnet
+   SFP_IP=192.168.200.1
+   SFP_USER=admin
+ 
    ```
 
-4. **Configure systemd service**
+### 1.3 Service Setup and Verification
+
+1. **Edit the preferred directory in the service file:**
    ```bash
-   sudo cp sfp-monitor.service /etc/systemd/system/
-   sudo systemctl daemon-reload
-   sudo systemctl enable --now sfp-monitor
+   # Edit sfp-monitor.service and change yourdevelopmentdir to your preferred directory
+   nano sfp-monitor.service
    ```
 
-## Metrics
+2. **Copy, reload, and start the service:**
+   ```bash
+   # Copy service file to user systemd directory
+   mkdir -p ~/.config/systemd/user
+   cp sfp-monitor.service ~/.config/systemd/user/
+   
+   # Reload and start the service
+   systemctl --user daemon-reload
+   systemctl --user enable --now sfp-monitor
+   ```
 
-### SFP Metrics
-| Metric | Description | Unit |
-|--------|-------------|------|
-| `mikrotik_sfp_rx_power` | Received optical power | dBm |
-| `mikrotik_sfp_tx_power` | Transmitted optical power | dBm |
-| `mikrotik_sfp_temperature` | Module temperature | °C |
-| `mikrotik_sfp_voltage` | Supply voltage | V |
+3. **Check service status:**
+   ```bash
+   systemctl --user status sfp-monitor
+   ```
 
-### PON Metrics
-| Metric | Description |
-|--------|-------------|
-| `mikrotik_pon_serdes_state` | Current SerDes state (hex) |
-| `mikrotik_pon_link_status` | PON link status (1=UP, 0=DOWN) |
-| `mikrotik_pon_fec_corrected_bytes` | Bytes corrected by FEC |
-- `mikrotik_sfp_rx_fcs_error_total` - Frames with FCS errors
-- `mikrotik_sfp_rx_fragment_total` - Frames smaller than minimum size with bad FCS
-- `mikrotik_sfp_rx_overflow_total` - Frames dropped due to buffer overflow
-- `mikrotik_sfp_tx_fcs_error_total` - Frames transmitted with FCS errors
+4. **View logs:**
+   ```bash
+   journalctl --user -u sfp-monitor -f
+   ```
 
-## Prerequisites
+5. **Test metrics endpoint:**
+   ```bash
+   # Test on localhost (if running locally)
+   curl http://localhost:9700/metrics | grep sfp
+   
+   # Or test on your host IP (if accessing remotely)
+   curl http://yourhostip:9700/metrics | grep sfp
+   ```
 
-- Linux server (tested on Ubuntu)
-- Python 3.8 or higher
-- Access to Mikrotik router with API enabled
-- Zaram XGSPON SFP module installed
-- `pass` password manager installed and configured
-- User account with sudo privileges
+## 2. Prometheus Configuration
 
-## Grafana Dashboard
+To collect metrics from the SFP monitor, you need to configure Prometheus to scrape the metrics endpoint. You'll need a Prometheus server (preferably containerized) that can push data to Grafana Cloud's Prometheus endpoint.
 
-A pre-configured Grafana dashboard is included in `sfp-monitor-dashboard.json`. Import this into your Grafana instance to visualize the collected metrics.
+### 2.1 Prometheus Server Setup
 
-### Dashboard Features
-- Real-time monitoring of SFP and PON metrics
-- Historical data visualization
-- Link status and error rate tracking
-- Temperature and voltage monitoring
-- FEC statistics and error rates
+**Option 1: Docker Compose (Recommended)**
+Create a `docker-compose.yml` file:
 
-## Security
+```yaml
 
-This script uses `pass` for secure credential management. No sensitive information is stored in plaintext. The following credentials are required:
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
 
-1. Mikrotik API credentials (stored in `mikrotik/rt1/api-monitor/api-monitoring`)
-2. SFP module telnet credentials (stored in `zaram/sfp/admin`)
-
-### Required Password Store Structure
+volumes:
+  prometheus_data:
 ```
-Password Store
-├── mikrotik
-│   └── rt1
-│       └── api-monitor
-│           └── api-monitoring
-└── zaram
-    └── sfp
-        └── admin
+
+**Option 2: System Package**
+```bash
+# Ubuntu/Debian
+sudo apt update
+sudo apt install prometheus
+
+# Or download from https://prometheus.io/download/
 ```
 
-## Troubleshooting
+### 2.2 Prometheus Configuration
+
+Create or update your `prometheus.yml` configuration file:
+
+```yaml
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+# Remote write to Grafana Cloud Prometheus
+remote_write:
+  - url: https://prometheus-us-central1.grafana.net/api/prom/push
+    basic_auth:
+      username: YOUR_USER#
+      password: YOUR_GRAFANA_CLOUD_API_KEY_HERE
+
+scrape_configs:
+  # SFP Monitor metrics
+  - job_name: 'mikrotik_sfp'
+    scrape_interval: 30s
+    scrape_timeout: 20s
+    static_configs:
+      - targets: ['yourlocalip_or_localhost:9700']
+        labels:
+          group: 'mikrotik_sfp'
+```
+
+**Configuration Details:**
+- **Job Name**: `mikrotik_sfp` - Identifies the SFP monitoring job in Prometheus
+- **Target**: `yourlocalup_or_localhost:9700` - The IP and port where the SFP monitor exposes metrics
+- **Scrape Interval**: 30s - Matches the collection interval of the monitoring script
+- **Scrape Timeout**: 20s - Allows sufficient time for metric collection
+- **Labels**: `group: 'mikrotik_sfp'` - Helps organize metrics in Prometheus/Grafana
+- **Remote Write**: Pushes metrics to Grafana Cloud Prometheus endpoint (not documented in detail here)
+
+### 2.3 Grafana Cloud Configuration
+
+To configure remote write to Grafana Cloud:
+
+1. **Get your Grafana Cloud credentials:**
+   - Go to your Grafana Cloud stack
+   - Navigate to **Configuration** → **Prometheus**
+   - Copy the **Remote Write Endpoint URL** and **Username/API Key**
+
+2. **Update the remote_write section** in your `prometheus.yml` with your actual credentials
+
+3. **Start Prometheus:**
+   ```bash
+   # If using Docker Compose
+   docker-compose up -d
+   
+   # If using system package
+   sudo systemctl enable prometheus
+   sudo systemctl start prometheus
+   ```
+
+### 2.4 Testing Prometheus Scraping
+
+1. **Verify metrics are available:**
+   ```bash
+   curl http://yourlocalip_or_localhost:9700/metrics
+   ```
+
+2. **Check Prometheus targets:**
+   - Open Prometheus web interface at `http://localhost:9090`
+   - Go to Status → Targets
+   - Verify the `mikrotik_sfp` target is UP
+
+3. **Test queries in Prometheus:**
+   ```promql
+   # Check if metrics are being collected
+   up{job="mikrotik_sfp"}
+   
+   # View SFP temperature
+   routeros_sfp_temperature_celsius
+   
+   # Check collection success rate
+   rate(sfp_monitor_collection_success[5m])
+   ```
+
+## 3. Grafana Terraform Deployment
+
+This project uses Terraform to deploy Grafana Cloud dashboards and alerts. The Terraform configuration is located in the `terraform/` directory.
+
+### 3.1 Prerequisites
+
+- **Terraform** (version 1.0+)
+- **Grafana Cloud API Key** with dashboard/alerts and folder permissions
+- **Grafana Cloud Stack URL** (e.g., `https://your-stack.grafana.net`)
+
+### 3.2 Configuration
+
+1. **Copy the example configuration:**
+   ```bash
+   cp terraform/terraform.tfvars.example terraform/terraform.tfvars
+   ```
+
+2. **Edit the configuration file:**
+   ```bash
+   vi terraform/terraform.tfvars
+   ```
+
+   Update the following variables:
+   ```hcl
+   grafana_cloud_url = "https://your-stack.grafana.net"
+   grafana_api_key   = "your-api-key"
+   ```
+
+### 3.3 Deploy Infrastructure
+
+1. **Initialize Terraform:**
+   ```bash
+   cd terraform
+   terraform init
+   ```
+
+2. **Plan the deployment:**
+   ```bash
+   terraform plan
+   ```
+
+3. **Apply the configuration:**
+   ```bash
+   terraform apply
+   ```
+
+### 3.4 What Gets Deployed
+
+- **Dashboards**: Pre-configured SFP monitoring dashboards
+- **Alert Rules**: Comprehensive alerting for SFP metrics
+- **Contact Points**: Notification channels for alerts
+- **Notification Policies**: Alert routing and grouping
+
+### 3.5 Terraform Files Structure
+
+```
+terraform/
+├── main.tf                 # Main Terraform configuration
+├── variables.tf            # Variable definitions
+├── terraform.tfvars        # Your configuration values
+├── providers.tf            # Provider configuration
+└── modules/
+    ├── alerts/             # Alert rules and policies
+    ├── dashboards/         # Dashboard configurations
+    └── folders/            # Dashboard organization
+```
+
+**Modular Approach**: The Terraform configuration uses a modular structure to organize different components. While not strictly necessary for a simple deployment, this approach provides better structure and organization of what gets created:
+
+- **Alerts Module**: Contains all alert rules and notification policies
+- **Dashboards Module**: Contains pre-configured dashboard definitions
+- **Folders Module**: Organizes dashboards into logical folders for better navigation
+
+## 4. Troubleshooting
 
 ### Common Issues
 1. **Connection Refused**: Ensure the SFP module's telnet interface is enabled and accessible
@@ -132,359 +373,4 @@ Logs are stored in the `logs/` directory with rotation (5 files, 1MB each).
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 1. Router Configuration
-
-### 1.1 Enable API on RouterOS
-```
-/ip service
-set api disabled=no
-set www-ssl disabled=no
-```
-
-
-### 1.2 Create API User
-```
-/user group
-add name=api-monitoring policy=read,api,rest-api,!write
-
-/user
-add name=api-monitor group=api-monitoring password="secure_password"
-```
-
-## 2. Monitoring Server Setup (192.168.33.110)
-
-### 2.1 Create Project Directory
-```bash
-mkdir -p ~/development/script-api-tik-monitor
-cd ~/development/script-api-tik-monitor
-```
-
-### 2.2 Create Required Files
-
-#### monitor.py
-```python
-#!/usr/bin/env python3
-import requests
-import time
-import logging
-from requests.auth import HTTPBasicAuth
-from prometheus_client import start_http_server, Gauge
-
-# Set up logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('monitor.log'),
-        logging.StreamHandler()
-    ]
-)
-
-# Prometheus metrics
-sfp_rx_power = Gauge('mikrotik_sfp_rx_power', 'SFP RX Power Level')
-sfp_tx_power = Gauge('mikrotik_sfp_tx_power', 'SFP TX Power Level')
-sfp_temperature = Gauge('mikrotik_sfp_temperature', 'SFP Temperature')
-sfp_voltage = Gauge('mikrotik_sfp_voltage', 'SFP Voltage')
-
-# Router configuration
-ROUTER_CONFIG = {
-    'host': '192.168.33.1',
-    'user': 'robert',
-    'password': 'your_password',  # Change this
-    'port': 443
-}
-
-def collect_metrics():
-    base_url = f"https://{ROUTER_CONFIG['host']}/rest"
-    
-    try:
-        response = requests.get(
-            f"{base_url}/interface/ethernet/sfp-sfpplus1/monitor",
-            auth=HTTPBasicAuth(ROUTER_CONFIG['user'], ROUTER_CONFIG['password']),
-            verify=False,
-            timeout=10
-        )
-        
-        if response.status_code == 200:
-            data = response.json()
-            
-            # Update Prometheus metrics
-            rx_power = data.get('sfp-rx-power')
-            tx_power = data.get('sfp-tx-power')
-            temperature = data.get('sfp-temperature')
-            voltage = data.get('sfp-voltage')
-            
-            if rx_power is not None:
-                sfp_rx_power.set(rx_power)
-                logging.info(f"RX Power: {rx_power}")
-            
-            if tx_power is not None:
-                sfp_tx_power.set(tx_power)
-                logging.info(f"TX Power: {tx_power}")
-            
-            if temperature is not None:
-                sfp_temperature.set(temperature)
-                logging.info(f"Temperature: {temperature}°C")
-            
-            if voltage is not None:
-                sfp_voltage.set(voltage)
-                logging.info(f"Voltage: {voltage}V")
-            
-        else:
-            logging.error(f"API request failed with status code: {response.status_code}")
-            
-    except Exception as e:
-        logging.error(f"Error collecting metrics: {e}")
-
-def main():
-    # Disable SSL warnings
-    requests.packages.urllib3.disable_warnings()
-    
-    # Start Prometheus HTTP server
-    start_http_server(9100)
-    logging.info("Prometheus metrics server started on port 9100")
-    
-    # Collection loop
-    while True:
-        try:
-            collect_metrics()
-        except Exception as e:
-            logging.error(f"Main loop error: {e}")
-        time.sleep(30)  # Collect every 30 seconds
-
-if __name__ == '__main__':
-    main()
-```
-
-#### requirements.txt
-```
-requests>=2.28.0
-prometheus-client>=0.16.0
-```
-
-#### mikrotik-monitor.service
-```ini
-[Unit]
-Description=Mikrotik SFP Monitoring Service
-After=network.target
-
-[Service]
-Type=simple
-User=robert
-WorkingDirectory=/home/robert/development/script-api-tik-monitor
-Environment=PATH=/home/robert/development/script-api-tik-monitor/venv/bin
-ExecStart=/home/robert/development/script-api-tik-monitor/venv/bin/python monitor.py
-Restart=always
-RestartSec=30
-
-[Install]
-WantedBy=multi-user.target
-```
-
-#### setup.sh
-```bash
-#!/bin/bash
-
-# Create virtual environment if it doesn't exist
-if [ ! -d "venv" ]; then
-    python3 -m venv venv
-    source venv/bin/activate
-    pip install -r requirements.txt
-else
-    source venv/bin/activate
-fi
-
-# Make monitor.py executable
-chmod +x monitor.py
-
-# Set up systemd service
-sudo cp mikrotik-monitor.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable mikrotik-monitor
-sudo systemctl start mikrotik-monitor
-
-echo "Setup complete. Check status with: systemctl status mikrotik-monitor"
-```
-
-## 3. Installation Steps
-
-1. Create project directory and navigate to it:
-```bash
-mkdir -p ~/development/script-api-tik-monitor
-cd ~/development/script-api-tik-monitor
-```
-
-2. Create all required files:
-```bash
-# Create files
-touch monitor.py requirements.txt setup.sh mikrotik-monitor.service
-
-# Make setup script executable
-chmod +x setup.sh
-```
-
-3. Copy the contents provided above into each respective file.
-
-4. Update the configuration in monitor.py:
-- Set correct router IP
-- Update username and password
-- Adjust port if needed
-
-5. Run the setup script:
-```bash
-./setup.sh
-```
-
-## 4. Verification
-
-1. Check service status:
-```bash
-systemctl status mikrotik-monitor
-```
-
-2. View logs:
-```bash
-journalctl -u mikrotik-monitor -f
-```
-
-3. Test metrics endpoint:
-```bash
-curl http://localhost:9100/metrics | grep mikrotik
-```
-
-## 5. Prometheus Configuration
-
-Add to your prometheus.yml:
-```yaml
-scrape_configs:
-  - job_name: 'mikrotik'
-    static_configs:
-      - targets: ['192.168.33.110:9100']
-```
-
-## 6. Grafana Dashboard
-
-Import the following JSON to create a basic dashboard:
-```json
-{
-  "panels": [
-    {
-      "title": "SFP Power Levels",
-      "type": "graph",
-      "datasource": "Prometheus",
-      "targets": [
-        {
-          "expr": "mikrotik_sfp_rx_power",
-          "legendFormat": "RX Power"
-        },
-        {
-          "expr": "mikrotik_sfp_tx_power",
-          "legendFormat": "TX Power"
-        }
-      ]
-    },
-    {
-      "title": "SFP Temperature",
-      "type": "gauge",
-      "datasource": "Prometheus",
-      "targets": [
-        {
-          "expr": "mikrotik_sfp_temperature",
-          "legendFormat": "Temperature"
-        }
-      ],
-      "thresholds": [
-        { "value": 70, "color": "yellow" },
-        { "value": 85, "color": "red" }
-      ]
-    }
-  ]
-}
-```
-
-## 7. Troubleshooting
-
-### Common Issues
-
-1. Service won't start:
-- Check logs: `journalctl -u mikrotik-monitor -f`
-- Verify Python virtual environment
-- Check file permissions
-
-2. No metrics available:
-- Verify router API access
-- Check firewall rules
-- Verify network connectivity
-
-3. API connection errors:
-- Verify router IP address
-- Check credentials
-- Ensure API service is enabled on router
-
-### Debug Commands
-
-1. Test API connection:
-```bash
-curl -k -u robert:password https://192.168.33.1/rest/interface/ethernet/sfp-sfpplus1/monitor
-```
-
-2. Check service logs:
-```bash
-journalctl -u mikrotik-monitor -n 50
-```
-
-3. Test Python script directly:
-```bash
-cd ~/development/script-api-tik-monitor
-source venv/bin/activate
-python monitor.py
-```
-
-## 8. Maintenance
-
-### Regular Tasks
-
-1. Log rotation (if needed):
-```bash
-sudo nano /etc/logrotate.d/mikrotik-monitor
-```
-
-Add:
-```
-/home/robert/development/script-api-tik-monitor/monitor.log {
-    daily
-    rotate 7
-    compress
-    delaycompress
-    missingok
-    notifempty
-}
-```
-
-2. Update dependencies:
-```bash
-cd ~/development/script-api-tik-monitor
-source venv/bin/activate
-pip install --upgrade -r requirements.txt
-```
-
-3. Backup configuration:
-```bash
-cp -r ~/development/script-api-tik-monitor ~/backup/script-api-tik-monitor-$(date +%Y%m%d)
-```
-
-### Security Considerations
-
-1. Regular password updates
-2. Keep Python packages updated
-3. Monitor system logs for unauthorized access attempts
-4. Use SSL for API connections when possible
-5. Implement proper firewall rules
-
-## 9. Support
-
-For issues or questions:
-1. Check the logs
-2. Review RouterOS API documentation
-3. Verify network connectivity
-4. Check system resources 
+#

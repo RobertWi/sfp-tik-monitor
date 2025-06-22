@@ -1,0 +1,35 @@
+# Grafana Cloud Configuration
+grafana_url = "https://your-instance.grafana.net"
+grafana_auth = "glsa_your_service_account_token_here"
+
+# Environment Configuration
+environment = "production"
+project_name = "sfp-monitoring"
+
+# Email Configuration
+email_address = "your-email@example.com"
+
+# Monitoring Configuration
+monitoring_interval = 30
+alert_evaluation_interval = 60
+
+# SFP Monitoring Thresholds
+sfp_rx_power_low_threshold = -30.0
+sfp_rx_power_high_threshold = -19.0
+sfp_temperature_warning_threshold = 70.0
+sfp_temperature_critical_threshold = 85.0
+
+# ONT Monitoring Thresholds
+ont_cpu_warning_threshold = 80.0
+ont_memory_warning_threshold = 85.0
+
+# Notification Configuration
+notification_policy_name = "SFP Monitoring Alerts"
+contact_point_name = "SFP Monitoring Team"
+notification_group_by = ["alertname", "interface_name", "severity"]
+notification_group_wait = "30s"
+notification_group_interval = "5m"
+notification_repeat_interval = "4h"
+
+# Datasource Configuration
+datasource_uid = "grafanacloud-prom" 
