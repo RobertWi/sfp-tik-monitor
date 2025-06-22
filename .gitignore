@@ -54,11 +54,21 @@ doc-zaram/
 terraform/terraform.tfvars
 *.tfvars
 
-# Terraform state and provider files
+# Terraform state and provider files - COMPREHENSIVE
 terraform/.terraform/
-*.tfstate
-*.tfstate.*
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.*
+terraform/terraform-provider-*
 .terraform/
 .terraform.lock.hcl
+*.tfstate
+*.tfstate.*
 terraform-provider-*
-terraform/.terraform.lock.hcl
+
+# Terraform modules and providers
+**/.terraform/
+**/.terraform.lock.hcl
+**/terraform.tfstate
+**/terraform.tfstate.*
+**/terraform-provider-*
