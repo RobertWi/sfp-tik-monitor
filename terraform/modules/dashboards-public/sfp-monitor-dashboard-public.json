@@ -24,7 +24,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "$datasource"
+        "uid": "grafanacloud-prom"
       },
       "description": "Current FEC statistics as stat panels for quick overview of signal quality issues.",
       "fieldConfig": {
@@ -112,7 +112,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "zaram_ont_pon_fec_uncorrectable_codewords_total{interface_name=\"sfp-sfpplus1\"}",
@@ -123,7 +123,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "(zaram_ont_pon_fec_uncorrectable_codewords_total{interface_name=\"sfp-sfpplus1\"} / zaram_ont_pon_fec_total_codewords_total{interface_name=\"sfp-sfpplus1\"}) * 100",
@@ -134,7 +134,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "zaram_ont_pon_fec_corrected_codewords_total{interface_name=\"sfp-sfpplus1\"}",
@@ -145,7 +145,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "zaram_ont_pon_fec_total_codewords_total{interface_name=\"sfp-sfpplus1\"}",
@@ -160,7 +160,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "$datasource"
+        "uid": "grafanacloud-prom"
       },
       "fieldConfig": {
         "defaults": {
@@ -255,7 +255,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "routeros_sfp_rx_power_dbm{interface_name=\"sfp-sfpplus1\"}",
@@ -266,7 +266,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "routeros_sfp_tx_power_dbm{interface_name=\"sfp-sfpplus1\"}",
@@ -277,7 +277,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "routeros_sfp_temperature_celsius{interface_name=\"sfp-sfpplus1\"}",
@@ -288,7 +288,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "zaram_ont_sfp_temperature_celsius{interface_name=\"sfp-sfpplus1\"}",
@@ -303,7 +303,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "$datasource"
+        "uid": "grafanacloud-prom"
       },
       "fieldConfig": {
         "defaults": {
@@ -357,7 +357,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "routeros_interface_link_status{interface_name=\"sfp-sfpplus1\"}",
@@ -368,7 +368,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "routeros_interface_link_status{interface_name=\"pppoe-wan\"}",
@@ -379,7 +379,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "sfp_monitor_collection_success{collector_type=\"routeros\"}",
@@ -390,7 +390,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "sfp_monitor_collection_success{collector_type=\"zaram_ont\"}",
@@ -405,7 +405,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "$datasource"
+        "uid": "grafanacloud-prom"
       },
       "fieldConfig": {
         "defaults": {
@@ -488,7 +488,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "routeros_sfp_rx_power_dbm{interface_name=\"sfp-sfpplus1\"}",
@@ -499,7 +499,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "routeros_sfp_tx_power_dbm{interface_name=\"sfp-sfpplus1\"}",
@@ -514,7 +514,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "$datasource"
+        "uid": "grafanacloud-prom"
       },
       "fieldConfig": {
         "defaults": {
@@ -576,7 +576,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "routeros_interface_link_downs_total{interface_name=\"sfp-sfpplus1\"} or on() vector(0)",
@@ -587,7 +587,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "routeros_interface_link_downs_total{interface_name=\"pppoe-wan\"} or on() vector(0)",
@@ -598,7 +598,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "routeros_interface_last_link_up_seconds{interface_name=\"sfp-sfpplus1\"} * 1000",
@@ -609,7 +609,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "routeros_interface_last_link_up_seconds{interface_name=\"pppoe-wan\"} * 1000",
@@ -620,7 +620,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "routeros_interface_last_link_down_seconds{interface_name=\"sfp-sfpplus1\"} * 1000",
@@ -631,7 +631,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "routeros_interface_last_link_down_seconds{interface_name=\"pppoe-wan\"} * 1000",
@@ -646,7 +646,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "$datasource"
+        "uid": "grafanacloud-prom"
       },
       "fieldConfig": {
         "defaults": {
@@ -700,7 +700,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "zaram_ont_olt_vendor_id{interface_name=\"sfp-sfpplus1\"}",
@@ -715,7 +715,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "$datasource"
+        "uid": "grafanacloud-prom"
       },
       "fieldConfig": {
         "defaults": {
@@ -769,7 +769,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "zaram_ont_olt_version{interface_name=\"sfp-sfpplus1\"}",
@@ -784,7 +784,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "$datasource"
+        "uid": "grafanacloud-prom"
       },
       "fieldConfig": {
         "defaults": {
@@ -838,7 +838,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "zaram_ont_pon_serdes_text_info{interface_name=\"sfp-sfpplus1\"}",
@@ -853,7 +853,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "$datasource"
+        "uid": "grafanacloud-prom"
       },
       "description": "A metric is a derived/calculated indicator that detects when SFP power readings might be cached or stale rather than real-time measurements.\nWhat it does:\nDetects cached data: When the SFP interface link is DOWN but power readings (RX/TX) are still showing values above -30 dBm\nFlags stale readings: Sets value to 1.0 when it detects potentially stale data, 0.0 for fresh data\nHelps identify unreliable metrics: Power readings that don't reflect the current link state",
       "fieldConfig": {
@@ -937,7 +937,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "routeros_sfp_data_stale{interface_name=\"sfp-sfpplus1\", metric_type=\"rx_power\"}",
@@ -948,7 +948,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "routeros_sfp_data_stale{interface_name=\"sfp-sfpplus1\", metric_type=\"tx_power\"}",
@@ -963,7 +963,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "$datasource"
+        "uid": "grafanacloud-prom"
       },
       "description": "FEC Error Rate calculation showing the percentage of uncorrectable codewords. Values above 0.1% indicate critical signal quality issues.",
       "fieldConfig": {
@@ -1051,7 +1051,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "(zaram_ont_pon_fec_uncorrectable_codewords_total{interface_name=\"sfp-sfpplus1\"} / zaram_ont_pon_fec_total_codewords_total{interface_name=\"sfp-sfpplus1\"})",
@@ -1066,7 +1066,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "$datasource"
+        "uid": "grafanacloud-prom"
       },
       "fieldConfig": {
         "defaults": {
@@ -1149,7 +1149,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "rate(routeros_interface_rx_bytes_total{interface_name=\"sfp-sfpplus1\"}[5m])",
@@ -1160,7 +1160,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "rate(routeros_interface_tx_bytes_total{interface_name=\"sfp-sfpplus1\"}[5m])",
@@ -1171,7 +1171,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "rate(routeros_interface_rx_bytes_total{interface_name=\"pppoe-wan\"}[5m])",
@@ -1182,7 +1182,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "rate(routeros_interface_tx_bytes_total{interface_name=\"pppoe-wan\"}[5m])",
@@ -1197,7 +1197,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "$datasource"
+        "uid": "grafanacloud-prom"
       },
       "description": "FEC (Forward Error Correction) statistics showing signal quality issues. High uncorrectable codewords indicate optical signal degradation.",
       "fieldConfig": {
@@ -1316,7 +1316,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "zaram_ont_pon_fec_corrected_bytes_total{interface_name=\"sfp-sfpplus1\"}",
@@ -1327,7 +1327,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "zaram_ont_pon_fec_corrected_codewords_total{interface_name=\"sfp-sfpplus1\"}",
@@ -1338,7 +1338,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "zaram_ont_pon_fec_uncorrectable_codewords_total{interface_name=\"sfp-sfpplus1\"}",
@@ -1349,7 +1349,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "zaram_ont_pon_fec_total_codewords_total{interface_name=\"sfp-sfpplus1\"}",
@@ -1364,7 +1364,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "$datasource"
+        "uid": "grafanacloud-prom"
       },
       "fieldConfig": {
         "defaults": {
@@ -1447,7 +1447,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "routeros_sfp_voltage_volts{interface_name=\"sfp-sfpplus1\"}",
@@ -1458,7 +1458,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "zaram_ont_sfp_voltage_volts{interface_name=\"sfp-sfpplus1\"}",
@@ -1473,7 +1473,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "$datasource"
+        "uid": "grafanacloud-prom"
       },
       "fieldConfig": {
         "defaults": {
@@ -1556,7 +1556,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "zaram_ont_cpu_usage_percent{interface_name=\"sfp-sfpplus1\"}",
@@ -1567,7 +1567,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "zaram_ont_memory_usage_percent{interface_name=\"sfp-sfpplus1\"}",
@@ -1582,7 +1582,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "$datasource"
+        "uid": "grafanacloud-prom"
       },
       "fieldConfig": {
         "defaults": {
@@ -1665,7 +1665,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "routeros_sfp_temperature_celsius{interface_name=\"sfp-sfpplus1\"}",
@@ -1676,7 +1676,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "zaram_ont_sfp_temperature_celsius{interface_name=\"sfp-sfpplus1\"}",
@@ -1691,7 +1691,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "$datasource"
+        "uid": "grafanacloud-prom"
       },
       "fieldConfig": {
         "defaults": {
@@ -1774,7 +1774,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "routeros_interface_link_downs_total{interface_name=\"sfp-sfpplus1\"}",
@@ -1785,7 +1785,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "routeros_interface_link_downs_total{interface_name=\"pppoe-wan\"}",
@@ -1800,7 +1800,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "$datasource"
+        "uid": "grafanacloud-prom"
       },
       "fieldConfig": {
         "defaults": {
@@ -1883,7 +1883,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "routeros_sfp_tx_bias_current_ma{interface_name=\"sfp-sfpplus1\"}",
@@ -1894,7 +1894,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "$datasource"
+            "uid": "grafanacloud-prom"
           },
           "editorMode": "code",
           "expr": "zaram_ont_sfp_tx_bias_current_ma{interface_name=\"sfp-sfpplus1\"}",
@@ -1917,32 +1917,7 @@
     "monitoring"
   ],
   "templating": {
-    "list": [
-      {
-        "current": {
-          "selected": false,
-          "text": "$datasource",
-          "value": "$datasource"
-        },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "$datasource"
-        },
-        "definition": "prometheus",
-        "hide": 0,
-        "includeAll": false,
-        "label": "Data Source",
-        "multi": false,
-        "name": "datasource",
-        "options": [],
-        "query": "prometheus",
-        "refresh": 1,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
-        "type": "datasource"
-      }
-    ]
+    "list": []
   },
   "time": {
     "from": "now-1h",
@@ -1950,7 +1925,7 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "SFP Monitor Dashboard",
-  "uid": "sfp-monitor-11",
+  "title": "SFP Monitor Dashboard (Public)",
+  "uid": "sfp-monitor-public",
   "version": 4
 }

@@ -296,7 +296,7 @@ This project uses Terraform to deploy Grafana Cloud dashboards and alerts. The T
 - **Contact Points**: Notification channels for alert delivery
 - **Notification Policies**: Alert routing and grouping rules
 
-**Example Dashboard**: You can see what the deployed dashboard looks like at: [https://doemijdiemetriekmaar.grafana.net/goto/vQ2vC2PNg?orgId=1](https://doemijdiemetriekmaar.grafana.net/goto/vQ2vC2PNg?orgId=1)
+**Example Dashboard**: You can see what the deployed dashboard looks like at: [https://doemijdiemetriekmaar.grafana.net/public-dashboards/dd55e481f2de4d14adf0231a9c8f1fa4](https://doemijdiemetriekmaar.grafana.net/public-dashboards/dd55e481f2de4d14adf0231a9c8f1fa4)
 
 ### 3.1 Prerequisites
 

@@ -26,6 +26,14 @@ module "dashboards" {
   folder_uid = module.folders.sfp_folder_uid
 }
 
+module "dashboards_public" {
+  source = "./modules/dashboards-public"
+  
+  environment = var.environment
+  project_name = var.project_name
+  common_tags = local.common_tags
+}
+
 module "alerts" {
   source = "./modules/alerts"
   
@@ -59,6 +67,11 @@ output "folder_urls" {
 output "dashboard_urls" {
   description = "URLs of created dashboards"
   value       = module.dashboards.dashboard_urls
+}
+
+output "public_dashboard_urls" {
+  description = "URLs of created public dashboards"
+  value       = module.dashboards_public.public_dashboard_urls
 }
 
 output "alert_rule_ids" {
