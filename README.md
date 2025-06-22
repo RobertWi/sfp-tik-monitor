@@ -1,6 +1,6 @@
 # Mikrotik SFP and PON Monitor
 
-This script monitors SFP and PON (Passive Optical Network) metrics from a Mikrotik router with Zaram XGSPON SFP module and exports them to Prometheus.
+This script monitors SFP and PON (Passive Optical Network) metrics from a Mikrotik router with Zaram XGSPON SFP module and exports them to Prometheus. Then it will push it to Grafana Cloud with dashboards and alerts set up via Terraform deployment.
 
 ## Use Your Own ONT with KPN XGS-PON
 
@@ -289,6 +289,14 @@ To configure remote write to Grafana Cloud:
 ## 3. Grafana Terraform Deployment
 
 This project uses Terraform to deploy Grafana Cloud dashboards and alerts. The Terraform configuration is located in the `terraform/` directory.
+
+**What Gets Deployed:**
+- **SFP Monitoring Dashboard**: Comprehensive dashboard showing optical power, temperature, voltage, PON state, and collection metrics
+- **Alert Rules**: Automated alerting for critical SFP conditions (high temperature, low optical power, connection failures)
+- **Contact Points**: Notification channels for alert delivery
+- **Notification Policies**: Alert routing and grouping rules
+
+**Example Dashboard**: You can see what the deployed dashboard looks like at: [https://doemijdiemetriekmaar.grafana.net/goto/aFRQ9hEHR?orgId=1](https://doemijdiemetriekmaar.grafana.net/goto/aFRQ9hEHR?orgId=1)
 
 ### 3.1 Prerequisites
 
