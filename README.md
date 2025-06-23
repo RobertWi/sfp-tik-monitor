@@ -296,7 +296,7 @@ This project uses Terraform to deploy Grafana Cloud dashboards and alerts. The T
 - **Contact Points**: Notification channels for alert delivery
 - **Notification Policies**: Alert routing and grouping rules
 
-**Example Dashboard**: You can see what the deployed dashboard looks like at: [https://doemijdiemetriekmaar.grafana.net/public-dashboards/dd55e481f2de4d14adf0231a9c8f1fa4](https://doemijdiemetriekmaar.grafana.net/public-dashboards/dd55e481f2de4d14adf0231a9c8f1fa4)
+**Example Dashboard**: You can see what the deployed dashboard looks like at: [https://doemijdiemetriekmaar.grafana.net/public-dashboards/6edd09ab0c614c34a84f02e3e8794c18](hhttps://doemijdiemetriekmaar.grafana.net/public-dashboards/6edd09ab0c614c34a84f02e3e8794c18)
 
 ### 3.1 Prerequisites
 
@@ -381,10 +381,3 @@ Logs are stored in the `logs/` directory with rotation (5 files, 1MB each).
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Example Public Dashboard
-
-You can view an example public dashboard here:
-
-[Example SFP/ONT Monitoring Dashboard](https://doemijdiemetriekmaar.grafana.net/public-dashboards/6edd09ab0c614c34a84f02e3e8794c18)
-
-#
