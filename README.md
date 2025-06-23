@@ -304,6 +304,9 @@ This project uses Terraform to deploy Grafana Cloud dashboards and alerts. The T
 - **Internal Dashboard**: Includes all monitoring panels and alert rules. Use this for your own monitoring and alerting needs.
 - **Public Dashboard**: A read-only version intended for sharing externally (e.g., with KPN support or others). This dashboard does not include alerts and is safe to share publicly.
 
+![SFP Monitor Dashboard Example](images/grafana_dash_example.png)
+*Example of the public SFP Monitor Dashboard as deployed via Terraform*
+
 **Example Public Dashboard**: You can see what the deployed public dashboard looks like at: [https://doemijdiemetriekmaar.grafana.net/public-dashboards/6edd09ab0c614c34a84f02e3e8794c18](https://doemijdiemetriekmaar.grafana.net/public-dashboards/6edd09ab0c614c34a84f02e3e8794c18)
 
 ### 3.1 Prerequisites
