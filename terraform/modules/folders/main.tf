@@ -10,18 +10,18 @@ terraform {
 # Grafana Folders for organizing dashboards and alert rules
 resource "grafana_folder" "routeros_monitoring" {
   title = "RouterOS Monitoring"
-  uid   = "routeros"
+  uid   = "routeros-20250623"
 }
 
 resource "grafana_folder" "sfp_monitoring" {
-  title = "SFP Monitoring"
-  uid   = "sfp"
+  title = "SFP Monitoring Private"
+  uid   = "sfp-20250623"
   parent_folder_uid = grafana_folder.routeros_monitoring.uid
 }
 
 resource "grafana_folder" "alerts" {
-  title = "Alerts"
-  uid   = "alerts"
+  title = "SFP Monitoring Alerts"
+  uid   = "alerts-20250623"
   parent_folder_uid = grafana_folder.routeros_monitoring.uid
 }
 

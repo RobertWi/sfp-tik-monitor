@@ -17,6 +17,7 @@ resource "grafana_rule_group" "sfp_monitoring" {
     name = "SFP Interface Link Down"
     condition = "A"
     for = "2m"
+    no_data_state = "OK"
     
     data {
       ref_id = "A"
@@ -46,6 +47,7 @@ resource "grafana_rule_group" "sfp_monitoring" {
     name = "SFP Temperature Critical"
     condition = "A"
     for = "2m"
+    no_data_state = "OK"
     
     data {
       ref_id = "A"
@@ -75,6 +77,7 @@ resource "grafana_rule_group" "sfp_monitoring" {
     name = "SFP RX Power Too Low"
     condition = "A"
     for = "2m"
+    no_data_state = "OK"
     
     data {
       ref_id = "A"
@@ -104,6 +107,7 @@ resource "grafana_rule_group" "sfp_monitoring" {
     name = "SFP RX Power Too High"
     condition = "A"
     for = "2m"
+    no_data_state = "OK"
     
     data {
       ref_id = "A"
@@ -133,6 +137,7 @@ resource "grafana_rule_group" "sfp_monitoring" {
     name = "SFP Data Stale"
     condition = "A"
     for = "2m"
+    no_data_state = "OK"
     
     data {
       ref_id = "A"
@@ -162,6 +167,7 @@ resource "grafana_rule_group" "sfp_monitoring" {
     name = "ONT PON Link Down"
     condition = "A"
     for = "2m"
+    no_data_state = "OK"
     
     data {
       ref_id = "A"
@@ -191,6 +197,7 @@ resource "grafana_rule_group" "sfp_monitoring" {
     name = "ONT CPU Usage High"
     condition = "A"
     for = "5m"
+    no_data_state = "OK"
     
     data {
       ref_id = "A"
@@ -200,7 +207,7 @@ resource "grafana_rule_group" "sfp_monitoring" {
       }
       datasource_uid = var.datasource_uid
       model = jsonencode({
-        expr         = "zaram_ont_cpu_usage_percent{job=\"mikrotik_sfp\", interface_name=\"sfp-sfpplus1\"} > 95"
+        expr         = "zaram_ont_cpu_usage{job=\"mikrotik_sfp\", interface_name=\"sfp-sfpplus1\"} > 80"
       })
     }
 
@@ -220,6 +227,7 @@ resource "grafana_rule_group" "sfp_monitoring" {
     name = "OLT Vendor Changed"
     condition = "A"
     for = "1h"
+    no_data_state = "OK"
     
     data {
       ref_id = "A"
@@ -249,6 +257,7 @@ resource "grafana_rule_group" "sfp_monitoring" {
     name = "SFP and PPPoE WAN Interfaces Down"
     condition = "A"
     for = "5m"
+    no_data_state = "OK"
     
     data {
       ref_id = "A"
@@ -278,6 +287,7 @@ resource "grafana_rule_group" "sfp_monitoring" {
     name = "PPPoE WAN Link Down"
     condition = "A"
     for = "2m"
+    no_data_state = "OK"
 
     data {
       ref_id = "A"
@@ -307,6 +317,7 @@ resource "grafana_rule_group" "sfp_monitoring" {
     name = "ONT FEC Uncorrectable Codewords High"
     condition = "A"
     for = "5m"
+    no_data_state = "OK"
     
     data {
       ref_id = "A"
@@ -336,6 +347,7 @@ resource "grafana_rule_group" "sfp_monitoring" {
     name = "ONT FEC Error Rate Critical"
     condition = "A"
     for = "5m"
+    no_data_state = "OK"
     
     data {
       ref_id = "A"
@@ -365,6 +377,7 @@ resource "grafana_rule_group" "sfp_monitoring" {
     name = "ONT FEC Corrected Codewords Increasing"
     condition = "A"
     for = "10m"
+    no_data_state = "OK"
     
     data {
       ref_id = "A"
