@@ -15,7 +15,7 @@ When using your own ONT, you may find yourself in situations where you need to r
 - **Second-line support** usually has better knowledge but availability depends on the specific support team
 - **Provider monitoring gaps**: KPN appears to be lacking comprehensive monitoring on their own OLT hardware to determine when issues fail on their end
 - **Evidence requirements**: Having detailed metrics from your own monitoring becomes crucial to demonstrate that issues are not on your end
-- **Support costs**: You may be charged for support calls if the provider determines the issue is with your equipment
+- **Support costs**: Support engineer is sent to your house and costs will be made; calls are free of charge.
 - **Limited provider visibility**: KPN's monitoring systems may not provide sufficient detail about OLT-side issues
 
 ### Why Monitoring is Critical
