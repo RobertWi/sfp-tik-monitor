@@ -68,6 +68,76 @@ class ZaramONTCollector:
                 collection_metrics.last_collection_timestamp.labels(collector_type='zaram_ont').set(time.time())
         
         return success
+
+    def collect_regular_metrics(self) -> bool:
+        """Collect regular Zaram ONT metrics (excluding OLT vendor info)"""
+        start_time = time.time()
+        success = False
+        
+        try:
+            logging.info("Collecting Zaram ONT regular metrics...")
+            
+            # Connect to the ONT module and collect data
+            command_outputs = self._connect_and_collect_regular()
+            
+            if command_outputs:
+                # Process the collected data (excluding OLT vendor)
+                self._process_sfp_metrics(command_outputs)
+                self._process_pon_metrics(command_outputs)
+                self._process_system_metrics(command_outputs)
+                
+                success = True
+                logging.info("Zaram ONT regular metrics collection completed successfully")
+            else:
+                logging.error("Failed to collect regular data from Zaram ONT module")
+        
+        except Exception as e:
+            logging.error(f"Error collecting Zaram ONT regular metrics: {e}")
+            collection_metrics.collection_errors_total.labels(collector_type='zaram_ont', error_type='collection_error').inc()
+        
+        finally:
+            # Update collection metrics
+            duration = time.time() - start_time
+            collection_metrics.collection_duration_seconds.labels(collector_type='zaram_ont').set(duration)
+            collection_metrics.collection_success.labels(collector_type='zaram_ont').set(1 if success else 0)
+            if success:
+                collection_metrics.last_collection_timestamp.labels(collector_type='zaram_ont').set(time.time())
+        
+        return success
+
+    def collect_olt_vendor_info(self) -> bool:
+        """Collect only OLT vendor information (runs less frequently)"""
+        start_time = time.time()
+        success = False
+        
+        try:
+            logging.info("Collecting OLT vendor information...")
+            
+            # Connect to the ONT module and collect only OLT vendor data
+            command_outputs = self._connect_and_collect_olt_vendor()
+            
+            if command_outputs:
+                # Process only OLT vendor info
+                self._process_olt_info(command_outputs)
+                
+                success = True
+                logging.info("OLT vendor information collection completed successfully")
+            else:
+                logging.error("Failed to collect OLT vendor data from Zaram ONT module")
+        
+        except Exception as e:
+            logging.error(f"Error collecting OLT vendor information: {e}")
+            collection_metrics.collection_errors_total.labels(collector_type='zaram_ont', error_type='collection_error').inc()
+        
+        finally:
+            # Update collection metrics
+            duration = time.time() - start_time
+            collection_metrics.collection_duration_seconds.labels(collector_type='zaram_ont').set(duration)
+            collection_metrics.collection_success.labels(collector_type='zaram_ont').set(1 if success else 0)
+            if success:
+                collection_metrics.last_collection_timestamp.labels(collector_type='zaram_ont').set(time.time())
+        
+        return success
     
     def _connect_and_collect(self) -> Optional[Dict[str, str]]:
         """Connect to the ONT module and collect command outputs"""
@@ -99,7 +169,8 @@ class ZaramONTCollector:
             # Handle telnet login
             i = child.expect(['login:', 'Connection refused', pexpect.TIMEOUT], timeout=10)
             if i != 0:  # not login prompt
-                logging.error(f"Failed to get login prompt. Got: {child.before.decode('utf-8', 'ignore')}")
+                error_msg = child.before.decode('utf-8', 'ignore') if child.before else 'None'
+                logging.error(f"Failed to get login prompt. Got: {error_msg}")
                 child.close()
                 return None
                 
@@ -113,7 +184,12 @@ class ZaramONTCollector:
                 return None
                 
             logging.info("Sending password...")
-            child.sendline(self.zaram_ont_password)
+            if self.zaram_ont_password:
+                child.sendline(self.zaram_ont_password)
+            else:
+                logging.error("Zaram ONT password is None")
+                child.close()
+                return None
             
             # Look for command prompt
             i = child.expect(['ZXOS11NPI', pexpect.TIMEOUT], timeout=5)
@@ -594,4 +670,273 @@ class ZaramONTCollector:
                 version = match.group(1).strip()
                 break
         
-        return vendor_id, vendor_name, version 
+        return vendor_id, vendor_name, version
+
+    def _connect_and_collect_regular(self) -> Optional[Dict[str, str]]:
+        """Connect to the ONT module and collect regular command outputs (excluding OLT vendor)"""
+        try:
+            logging.info(f"Connecting to {self.ssh_user}@{self.ssh_host}...")
+            child = pexpect.spawn(f'ssh {self.ssh_user}@{self.ssh_host}')
+            
+            # Handle SSH password prompt if needed (should use SSH keys)
+            i = child.expect(['password:', pexpect.EOF, pexpect.TIMEOUT], timeout=5)
+            if i == 0:  # password prompt
+                logging.info("SSH password required, using SSH key authentication")
+                # If we get here, SSH key authentication failed
+                child.close()
+                return None
+            
+            # Wait for router prompt
+            i = child.expect([r'\[.*\] >', pexpect.TIMEOUT], timeout=10)
+            if i != 0:  # timeout or other error
+                logging.error("Failed to get router prompt")
+                child.close()
+                return None
+                
+            logging.info("Connected to RouterOS")
+            
+            # Start telnet to SFP
+            logging.info(f"Starting telnet to {self.zaram_ont_ip}...")
+            child.sendline(f'/system telnet {self.zaram_ont_ip}')
+            
+            # Handle telnet login
+            i = child.expect(['login:', 'Connection refused', pexpect.TIMEOUT], timeout=10)
+            if i != 0:  # not login prompt
+                error_msg = child.before.decode('utf-8', 'ignore') if child.before else 'None'
+                logging.error(f"Failed to get login prompt. Got: {error_msg}")
+                child.close()
+                return None
+                
+            logging.info("Sending username...")
+            child.sendline(self.zaram_ont_user)
+            
+            i = child.expect(['Password:', pexpect.TIMEOUT], timeout=5)
+            if i != 0:  # timeout or other error
+                logging.error("Failed to get password prompt")
+                child.close()
+                return None
+                
+            logging.info("Sending password...")
+            if self.zaram_ont_password:
+                child.sendline(self.zaram_ont_password)
+            else:
+                logging.error("Zaram ONT password is None")
+                child.close()
+                return None
+            
+            # Look for command prompt
+            i = child.expect(['ZXOS11NPI', pexpect.TIMEOUT], timeout=5)
+            if i != 0:  # timeout or other error
+                logging.error("Failed to get SFP module prompt")
+                child.close()
+                return None
+                
+            logging.info("Successfully logged in to SFP module")
+            
+            # Run regular commands and collect outputs (excluding OLT vendor)
+            command_outputs = self._run_regular_commands(child)
+            
+            # Exit telnet and close connection
+            child.sendline('exit')  # exit telnet
+            child.expect(r'\[.*\] >', timeout=5)
+            child.sendline('quit')  # exit SSH
+            child.close()
+            
+            return command_outputs
+            
+        except Exception as e:
+            logging.error(f"Error in _connect_and_collect_regular: {str(e)}", exc_info=True)
+            try:
+                if 'child' in locals():
+                    child.close()
+            except:
+                pass
+            return None
+
+    def _connect_and_collect_olt_vendor(self) -> Optional[Dict[str, str]]:
+        """Connect to the ONT module and collect only OLT vendor command outputs"""
+        try:
+            logging.info(f"Connecting to {self.ssh_user}@{self.ssh_host}...")
+            child = pexpect.spawn(f'ssh {self.ssh_user}@{self.ssh_host}')
+            
+            # Handle SSH password prompt if needed (should use SSH keys)
+            i = child.expect(['password:', pexpect.EOF, pexpect.TIMEOUT], timeout=5)
+            if i == 0:  # password prompt
+                logging.info("SSH password required, using SSH key authentication")
+                # If we get here, SSH key authentication failed
+                child.close()
+                return None
+            
+            # Wait for router prompt
+            i = child.expect([r'\[.*\] >', pexpect.TIMEOUT], timeout=10)
+            if i != 0:  # timeout or other error
+                logging.error("Failed to get router prompt")
+                child.close()
+                return None
+                
+            logging.info("Connected to RouterOS")
+            
+            # Start telnet to SFP
+            logging.info(f"Starting telnet to {self.zaram_ont_ip}...")
+            child.sendline(f'/system telnet {self.zaram_ont_ip}')
+            
+            # Handle telnet login
+            i = child.expect(['login:', 'Connection refused', pexpect.TIMEOUT], timeout=10)
+            if i != 0:  # not login prompt
+                error_msg = child.before.decode('utf-8', 'ignore') if child.before else 'None'
+                logging.error(f"Failed to get login prompt. Got: {error_msg}")
+                child.close()
+                return None
+                
+            logging.info("Sending username...")
+            child.sendline(self.zaram_ont_user)
+            
+            i = child.expect(['Password:', pexpect.TIMEOUT], timeout=5)
+            if i != 0:  # timeout or other error
+                logging.error("Failed to get password prompt")
+                child.close()
+                return None
+                
+            logging.info("Sending password...")
+            if self.zaram_ont_password:
+                child.sendline(self.zaram_ont_password)
+            else:
+                logging.error("Zaram ONT password is None")
+                child.close()
+                return None
+            
+            # Look for command prompt
+            i = child.expect(['ZXOS11NPI', pexpect.TIMEOUT], timeout=5)
+            if i != 0:  # timeout or other error
+                logging.error("Failed to get SFP module prompt")
+                child.close()
+                return None
+                
+            logging.info("Successfully logged in to SFP module")
+            
+            # Run only OLT vendor command and collect output
+            command_outputs = self._run_olt_vendor_command(child)
+            
+            # Exit telnet and close connection
+            child.sendline('exit')  # exit telnet
+            child.expect(r'\[.*\] >', timeout=5)
+            child.sendline('quit')  # exit SSH
+            child.close()
+            
+            return command_outputs
+            
+        except Exception as e:
+            logging.error(f"Error in _connect_and_collect_olt_vendor: {str(e)}", exc_info=True)
+            try:
+                if 'child' in locals():
+                    child.close()
+            except:
+                pass
+            return None
+
+    def _run_regular_commands(self, child) -> Dict[str, str]:
+        """Run regular commands on the ONT module (excluding OLT vendor) and return outputs"""
+        command_outputs = {}
+        
+        # Regular commands for ONT monitoring (excluding OLT vendor)
+        commands = [
+            'sfp info',              # Basic SFP module details
+            'onu show pon counter',  # FEC counters (at the end of output)
+            'onu show ponlink',      # PON link status
+            'onu show pon serdes',   # SerDes state
+            'sysmon cpu',            # CPU usage
+            'sysmon memory'          # Memory usage
+        ]
+        
+        logging.info("Collecting ONT module regular information...")
+        
+        for cmd in commands:
+            try:
+                logging.info(f"Running command: {cmd}")
+                
+                # Send the command
+                child.sendline(cmd)
+                
+                # Clear the buffer before capturing output
+                time.sleep(0.5)
+                
+                # Wait for the prompt to return - use the actual prompt format
+                i = child.expect([r'admin@ZXOS11NPI\s+\[/\]\s+#', r'ZXOS11NPI.*#', pexpect.TIMEOUT], timeout=10)
+                if i == 2:  # timeout
+                    logging.error(f"Command '{cmd}' timed out")
+                    command_outputs[cmd] = ""
+                else:
+                    # Get the output - use before which contains everything up to the prompt
+                    full_output = child.before.decode('utf-8', 'ignore') if child.before else ""
+                    
+                    # Remove the command from the beginning of the output
+                    cmd_pattern = re.escape(cmd) + r'\s*\r?\n'
+                    output = re.sub(cmd_pattern, '', full_output, count=1)
+                    
+                    # Clean up the output - remove empty lines and prompt artifacts
+                    cleaned_output = '\n'.join([line.strip() for line in output.split('\n') 
+                                             if line.strip() and 'admin@' not in line and 'ZXOS11NPI' not in line])
+                    command_outputs[cmd] = cleaned_output
+                    
+                    logging.debug(f"Command '{cmd}' output length: {len(cleaned_output)}")
+                    if cleaned_output:
+                        logging.debug(f"Command '{cmd}' output: '{cleaned_output[:200]}...'")
+                
+                time.sleep(0.5)  # Small delay between commands
+                
+            except Exception as e:
+                logging.error(f"Error running command '{cmd}': {str(e)}")
+                command_outputs[cmd] = ""
+        
+        return command_outputs
+
+    def _run_olt_vendor_command(self, child) -> Dict[str, str]:
+        """Run only OLT vendor command on the ONT module and return output"""
+        command_outputs = {}
+        
+        # Only OLT vendor command
+        commands = [
+            'onu dump ptp'          # PTP timing info including vendor ID
+        ]
+        
+        logging.info("Collecting OLT vendor information...")
+        
+        for cmd in commands:
+            try:
+                logging.info(f"Running command: {cmd}")
+                
+                # Send the command
+                child.sendline(cmd)
+                
+                # Clear the buffer before capturing output
+                time.sleep(0.5)
+                
+                # Wait for the prompt to return - use the actual prompt format
+                i = child.expect([r'admin@ZXOS11NPI\s+\[/\]\s+#', r'ZXOS11NPI.*#', pexpect.TIMEOUT], timeout=10)
+                if i == 2:  # timeout
+                    logging.error(f"Command '{cmd}' timed out")
+                    command_outputs[cmd] = ""
+                else:
+                    # Get the output - use before which contains everything up to the prompt
+                    full_output = child.before.decode('utf-8', 'ignore') if child.before else ""
+                    
+                    # Remove the command from the beginning of the output
+                    cmd_pattern = re.escape(cmd) + r'\s*\r?\n'
+                    output = re.sub(cmd_pattern, '', full_output, count=1)
+                    
+                    # Clean up the output - remove empty lines and prompt artifacts
+                    cleaned_output = '\n'.join([line.strip() for line in output.split('\n') 
+                                             if line.strip() and 'admin@' not in line and 'ZXOS11NPI' not in line])
+                    command_outputs[cmd] = cleaned_output
+                    
+                    logging.debug(f"Command '{cmd}' output length: {len(cleaned_output)}")
+                    if cleaned_output:
+                        logging.debug(f"Command '{cmd}' output: '{cleaned_output[:200]}...'")
+                
+                time.sleep(0.5)  # Small delay between commands
+                
+            except Exception as e:
+                logging.error(f"Error running command '{cmd}': {str(e)}")
+                command_outputs[cmd] = ""
+        
+        return command_outputs 

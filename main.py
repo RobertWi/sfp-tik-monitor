@@ -41,21 +41,41 @@ def main():
     routeros_collector = RouterOSCollector()
     zaram_ont_collector = ZaramONTCollector()
 
+    # Timer variables for different collection intervals
+    last_regular_collection = 0
+    last_olt_vendor_collection = 0
+    olt_vendor_interval = 300  # 5 minutes (300 seconds)
+    
+    logging.info(f"Starting collection with regular interval: {config.collection_interval_seconds}s, OLT vendor interval: {olt_vendor_interval}s")
+
     # Main collection loop
     while True:
         try:
-            logging.info("Starting metrics collection cycle...")
-            routeros_collector.collect_all_metrics()
-            zaram_ont_collector.collect_all_metrics()
+            current_time = time.time()
             
-            # Only log metrics summary in debug mode
-            if config.debug_logging:
-                log_metrics_summary()
+            # Check if it's time for regular collection (every 30 seconds)
+            if current_time - last_regular_collection >= config.collection_interval_seconds:
+                logging.info("Starting regular metrics collection cycle...")
+                routeros_collector.collect_all_metrics()
+                zaram_ont_collector.collect_regular_metrics()
+                last_regular_collection = current_time
+                
+                # Only log metrics summary in debug mode
+                if config.debug_logging:
+                    log_metrics_summary()
+            
+            # Check if it's time for OLT vendor collection (every 5 minutes)
+            if current_time - last_olt_vendor_collection >= olt_vendor_interval:
+                logging.info("Starting OLT vendor collection cycle...")
+                zaram_ont_collector.collect_olt_vendor_info()
+                last_olt_vendor_collection = current_time
+            
+            # Sleep for a short interval to avoid busy waiting
+            time.sleep(1)
+            
         except Exception as e:
             logging.error(f"Error in main collection loop: {e}", exc_info=True)
             time.sleep(60)  # Wait longer on error
-        else:
-            time.sleep(config.collection_interval_seconds)
 
 
 if __name__ == '__main__':
