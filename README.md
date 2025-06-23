@@ -381,4 +381,10 @@ Logs are stored in the `logs/` directory with rotation (5 files, 1MB each).
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## Example Public Dashboard
+
+You can view an example public dashboard here:
+
+[Example SFP/ONT Monitoring Dashboard](https://doemijdiemetriekmaar.grafana.net/public-dashboards/6edd09ab0c614c34a84f02e3e8794c18)
+
 #
