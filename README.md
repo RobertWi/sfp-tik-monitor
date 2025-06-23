@@ -296,7 +296,15 @@ This project uses Terraform to deploy Grafana Cloud dashboards and alerts. The T
 - **Contact Points**: Notification channels for alert delivery
 - **Notification Policies**: Alert routing and grouping rules
 
-**Example Dashboard**: You can see what the deployed dashboard looks like at: [https://doemijdiemetriekmaar.grafana.net/public-dashboards/6edd09ab0c614c34a84f02e3e8794c18](hhttps://doemijdiemetriekmaar.grafana.net/public-dashboards/6edd09ab0c614c34a84f02e3e8794c18)
+**ℹ️ Note:**
+
+**The public dashboard is intended for external sharing only (e.g., with KPN support or others). It is read-only and does NOT include any alert rules. Use the internal dashboard for your own monitoring and alerting.**
+
+**Dashboard Types:**
+- **Internal Dashboard**: Includes all monitoring panels and alert rules. Use this for your own monitoring and alerting needs.
+- **Public Dashboard**: A read-only version intended for sharing externally (e.g., with KPN support or others). This dashboard does not include alerts and is safe to share publicly.
+
+**Example Public Dashboard**: You can see what the deployed public dashboard looks like at: [https://doemijdiemetriekmaar.grafana.net/public-dashboards/6edd09ab0c614c34a84f02e3e8794c18](https://doemijdiemetriekmaar.grafana.net/public-dashboards/6edd09ab0c614c34a84f02e3e8794c18)
 
 ### 3.1 Prerequisites
 
