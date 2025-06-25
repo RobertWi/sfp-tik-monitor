@@ -328,10 +328,14 @@ This project uses Terraform to deploy Grafana Cloud dashboards and alerts. The T
 ```
 
 **Alert Rules:**
-- Located in the "RouterOS Monitoring/SFP Monitoring" folder
-- Contains comprehensive alert rules for SFP monitoring
-- Grouped under "SFP Monitoring Alerts" rule group
-- Includes critical conditions, warnings, and system health checks
+- Located in Grafana-managed rule group "RouterOS Monitoring/SFP Monitoring"
+- Alert group name: "SFP Monitoring Alerts v2"
+- Contains comprehensive alert rules for SFP monitoring including:
+  - Critical conditions and thresholds
+  - Warning level indicators
+  - System health status checks
+  - Performance degradation alerts
+  - Connection stability monitoring
 
 ![SFP Monitor Dashboard Example](images/grafana_dash_example.png)
 *Example of the SFP Monitor Dashboard as deployed via Terraform*
