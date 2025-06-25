@@ -258,14 +258,12 @@ This project includes two types of dashboards managed by Terraform:
    - Full-featured dashboard with edit capabilities
    - Requires authentication
    - Contains detailed metrics and configuration options
-   - URL: https://doemijdiemetriekmaar.grafana.net/d/sfp-monitor-11/sfp-monitor-dashboard
 
 2. **Public Dashboard**:
    - Also located in the "RouterOS Monitoring/SFP Monitoring" folder
    - Read-only version accessible without authentication
    - Perfect for sharing with support teams or community members
    - Contains essential metrics for troubleshooting
-   - URL: https://doemijdiemetriekmaar.grafana.net/public-dashboards/aepz11pasfcaof
 
 Both dashboards are automatically deployed and managed through Terraform, ensuring consistent configuration and version control.
 
@@ -274,27 +272,26 @@ Both dashboards are automatically deployed and managed through Terraform, ensuri
 Both dashboards include:
 
 - **SFP Module Metrics**:
-  - Temperature monitoring
-  - Voltage levels
-  - TX/RX power levels
-  - Bias current measurements
+  - Temperature monitoring with threshold alerts
+  - Operating voltage levels and stability tracking
+  - TX/RX power levels with dBm measurements
+  - Bias current measurements for laser health monitoring
+  - Real-time performance graphs and trends
 
 - **PON Statistics**:
-  - Link status
-  - SerDes state
-  - FEC statistics
-  - Error counters
+  - Link status with uptime tracking
+  - SerDes state and synchronization status
+  - FEC statistics including error correction rates
+  - Error counters with detailed breakdown
+  - Transmission quality indicators
 
 - **Interface Status**:
-  - Link state monitoring
-  - Traffic statistics
-  - Error rates
+  - Link state monitoring with historical uptime
+  - Traffic statistics with bandwidth utilization
+  - Error rates and packet loss metrics
+  - Interface performance analytics
+  - Connection stability indicators
 
-The internal dashboard additionally provides:
-- Advanced configuration options
-- Historical data analysis
-- Alert management
-- Custom annotations
 
 ## 3. Grafana Terraform Deployment
 
@@ -321,18 +318,6 @@ This project uses Terraform to deploy Grafana Cloud dashboards and alerts. The T
     └── 🚨 SFP Monitoring Alerts (rule group)
 ```
 
-**Dashboard Access:**
-- **Internal Dashboard**: https://doemijdiemetriekmaar.grafana.net/d/sfp-monitor-11/sfp-monitor-dashboard
-  - Full-featured with edit capabilities
-  - Requires authentication
-  - Includes alert rules and advanced features
-  
-- **Public Dashboard**: https://doemijdiemetriekmaar.grafana.net/public-dashboards/aepz11pasfcaof
-  - Read-only version
-  - No authentication required
-  - Perfect for sharing with support teams
-  - Excludes sensitive information
-
 **Alert Rules:**
 - Located in the "RouterOS Monitoring/SFP Monitoring" folder
 - Contains comprehensive alert rules for SFP monitoring
@@ -341,8 +326,6 @@ This project uses Terraform to deploy Grafana Cloud dashboards and alerts. The T
 
 ![SFP Monitor Dashboard Example](images/grafana_dash_example.png)
 *Example of the SFP Monitor Dashboard as deployed via Terraform*
-
-**Example Public Dashboard**: You can see what the deployed public dashboard looks like at: [https://doemijdiemetriekmaar.grafana.net/public-dashboards/01ed5b84ea1a409f8a901d3fc35f1aa0](https://doemijdiemetriekmaar.grafana.net/public-dashboards/01ed5b84ea1a409f8a901d3fc35f1aa0)
 
 ### 3.1 Prerequisites
 
