@@ -4,43 +4,99 @@ import os
 import subprocess
 import logging
 from typing import Optional
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 class Config:
     """Configuration management for the SFP monitoring system"""
     
     def __init__(self):
         # RouterOS API Configuration
-        self.routeros_host = 'rt1.home.doemijdienamespacemaar.nl'
-        self.routeros_user = 'api-monitor'
-        self.routeros_api_protocol = 'https'  # Use https:// protocol for API
+        self.routeros_host = os.getenv('ROUTEROS_HOST')
+        if not self.routeros_host:
+            raise ValueError("ROUTEROS_HOST must be set in environment")
+        
+        self.routeros_user = os.getenv('ROUTEROS_USER')
+        if not self.routeros_user:
+            raise ValueError("ROUTEROS_USER must be set in environment")
+            
+        self.routeros_api_protocol = os.getenv('ROUTEROS_API_PROTOCOL')
+        if not self.routeros_api_protocol:
+            raise ValueError("ROUTEROS_API_PROTOCOL must be set in environment")
+            
+        self.routeros_pass_path = os.getenv('ROUTEROS_PASS_PATH')
+        if not self.routeros_pass_path:
+            raise ValueError("ROUTEROS_PASS_PATH must be set in environment")
         
         # Zaram ONT Module Configuration
-        self.zaram_ont_ip = '192.168.200.1'
-        self.zaram_ont_user = 'admin'
+        self.zaram_ont_ip = os.getenv('ZARAM_ONT_IP')
+        if not self.zaram_ont_ip:
+            raise ValueError("ZARAM_ONT_IP must be set in environment")
+            
+        self.zaram_ont_user = os.getenv('ZARAM_ONT_USER')
+        if not self.zaram_ont_user:
+            raise ValueError("ZARAM_ONT_USER must be set in environment")
+            
+        self.zaram_pass_path = os.getenv('ZARAM_PASS_PATH')
+        if not self.zaram_pass_path:
+            raise ValueError("ZARAM_PASS_PATH must be set in environment")
         
         # Monitoring Configuration
-        self.monitored_interfaces = ['sfp-sfpplus1', 'pppoe-wan']
-        self.collection_interval_seconds = 30
-        self.metrics_port = 9700
-        self.metrics_host = '0.0.0.0'
+        monitored_interfaces = os.getenv('MONITORED_INTERFACES')
+        if not monitored_interfaces:
+            raise ValueError("MONITORED_INTERFACES must be set in environment")
+        self.monitored_interfaces = monitored_interfaces.split(',')
+        
+        collection_interval = os.getenv('COLLECTION_INTERVAL_SECONDS')
+        if not collection_interval:
+            raise ValueError("COLLECTION_INTERVAL_SECONDS must be set in environment")
+        self.collection_interval_seconds = int(collection_interval)
+        
+        metrics_port = os.getenv('METRICS_PORT')
+        if not metrics_port:
+            raise ValueError("METRICS_PORT must be set in environment")
+        self.metrics_port = int(metrics_port)
+        
+        self.metrics_host = os.getenv('METRICS_HOST')
+        if not self.metrics_host:
+            raise ValueError("METRICS_HOST must be set in environment")
         
         # Logging Configuration
-        self.log_level = logging.INFO  # Changed back to INFO to reduce verbose output
-        self.log_file = 'logs/sfp_monitor.log'
-        self.log_max_bytes = 1024 * 1024  # 1MB
-        self.log_backup_count = 5
-        self.debug_logging = False  # Set to False to reduce verbose logging
+        self.log_level = getattr(logging, os.getenv('LOG_LEVEL', 'INFO').upper())  # keeping INFO as safe default
+        
+        self.log_file = os.getenv('LOG_FILE')
+        if not self.log_file:
+            raise ValueError("LOG_FILE must be set in environment")
+            
+        log_max_bytes = os.getenv('LOG_MAX_BYTES')
+        if not log_max_bytes:
+            raise ValueError("LOG_MAX_BYTES must be set in environment")
+        self.log_max_bytes = int(log_max_bytes)
+        
+        log_backup_count = os.getenv('LOG_BACKUP_COUNT')
+        if not log_backup_count:
+            raise ValueError("LOG_BACKUP_COUNT must be set in environment")
+        self.log_backup_count = int(log_backup_count)
+        
+        self.debug_logging = os.getenv('DEBUG_LOGGING', 'false').lower() == 'true'  # keeping false as safe default
         
         # SSH Configuration
-        self.ssh_user = 'robert'
-        self.ssh_host = '192.168.33.1'  # Keep SSH on local IP
+        self.ssh_user = os.getenv('SSH_USER')
+        if not self.ssh_user:
+            raise ValueError("SSH_USER must be set in environment")
+            
+        self.ssh_host = os.getenv('SSH_HOST')
+        if not self.ssh_host:
+            raise ValueError("SSH_HOST must be set in environment")
         
-        # Timeout Configuration
+        # Timeout Configuration - Hardcoded values
         self.api_timeout_seconds = 10
         self.ssh_timeout_seconds = 10
         self.telnet_timeout_seconds = 10
         
-        # Data Quality Configuration
+        # Data Quality Configuration - Hardcoded value
         self.stale_data_threshold_dbm = -40.0  # dBm threshold for stale data detection
         
         # OLT Vendor ID mapping
@@ -100,16 +156,20 @@ class Config:
     def get_routeros_password(self) -> Optional[str]:
         """Get RouterOS API password from pass"""
         try:
-            result = subprocess.run(
-                ['pass', 'mikrotik/rt1/api-monitor/api-monitoring'], 
-                capture_output=True, 
-                text=True
-            )
-            if result.returncode == 0:
-                return result.stdout.strip()
-            else:
-                logging.error(f"Failed to get RouterOS password: {result.stderr}")
+            if not self.routeros_pass_path:
+                logging.error("RouterOS password path not set")
                 return None
+                
+            result = subprocess.run(
+                ['pass', self.routeros_pass_path], 
+                capture_output=True, 
+                text=True,
+                check=True
+            )
+            return result.stdout.strip()
+        except subprocess.CalledProcessError as e:
+            logging.error(f"Failed to get RouterOS password: {e.stderr}")
+            return None
         except Exception as e:
             logging.error(f"Error running pass command for RouterOS password: {e}")
             return None
@@ -117,16 +177,20 @@ class Config:
     def get_zaram_ont_password(self) -> Optional[str]:
         """Get Zaram ONT password from pass"""
         try:
-            result = subprocess.run(
-                ['pass', 'zaram/sfp/admin'], 
-                capture_output=True, 
-                text=True
-            )
-            if result.returncode == 0:
-                return result.stdout.strip()
-            else:
-                logging.error(f"Failed to get Zaram ONT password: {result.stderr}")
+            if not self.zaram_pass_path:
+                logging.error("Zaram ONT password path not set")
                 return None
+                
+            result = subprocess.run(
+                ['pass', self.zaram_pass_path], 
+                capture_output=True, 
+                text=True,
+                check=True
+            )
+            return result.stdout.strip()
+        except subprocess.CalledProcessError as e:
+            logging.error(f"Failed to get Zaram ONT password: {e.stderr}")
+            return None
         except Exception as e:
             logging.error(f"Error running pass command for Zaram ONT password: {e}")
             return None

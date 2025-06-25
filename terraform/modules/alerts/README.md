@@ -5,9 +5,11 @@ This module manages Grafana Cloud alerting configuration including alert rules, 
 ## Features
 
 - Alert rules for SFP monitoring (temperature, optical power, interface status)
+- Data source health monitoring and error detection
 - Contact point configuration for email notifications
 - Notification policies with grouping and timing rules
 - Integration with Grafana Cloud alerting
+- Intelligent handling of temporary data source issues and evaluation delays
 
 ## Inputs
 
@@ -18,9 +20,9 @@ This module manages Grafana Cloud alerting configuration including alert rules, 
 | folder_uid | UID of the alerts folder | `string` | n/a | yes |
 | datasource_uid | UID of the Prometheus datasource | `string` | n/a | yes |
 | alert_evaluation_interval | Alert evaluation interval in seconds | `number` | `60` | no |
-| sfp_temperature_critical_threshold | Critical temperature threshold in Celsius | `number` | `85.0` | no |
-| sfp_rx_power_low_threshold | Low RX power threshold in dBm | `number` | `-30.0` | no |
-| sfp_rx_power_high_threshold | High RX power threshold in dBm | `number` | `-19.0` | no |
+| sfp_temperature_critical_threshold | Critical temperature threshold in Celsius | `number` | `80.0` | no |
+| sfp_rx_power_low_threshold | Lower bound RX power threshold in dBm (more negative value) | `number` | `-30.0` | no |
+| sfp_rx_power_high_threshold | Upper bound RX power threshold in dBm (less negative value) | `number` | `-20.0` | no |
 | ont_cpu_warning_threshold | ONT CPU warning threshold percentage | `number` | `80.0` | no |
 | contact_point_name | Name for the contact point | `string` | n/a | yes |
 | notification_policy_name | Name for the notification policy | `string` | n/a | yes |
@@ -34,36 +36,24 @@ This module manages Grafana Cloud alerting configuration including alert rules, 
 | contact_point_uid | UID of the created contact point |
 | notification_policy_uid | UID of the created notification policy |
 
-## Usage
-
-```hcl
-module "alerts" {
-  source = "./modules/alerts"
-  
-  environment = "production"
-  project_name = "sfp-monitoring"
-  folder_uid = module.folders.alerts_folder_uid
-  datasource_uid = var.datasource_uid
-  
-  # Alert thresholds
-  sfp_temperature_critical_threshold = 85.0
-  sfp_rx_power_low_threshold = -30.0
-  sfp_rx_power_high_threshold = -19.0
-  
-  # Notification configuration
-  contact_point_name = "SFP Monitoring Team"
-  notification_policy_name = "SFP Monitoring Alerts"
-  email_address = "alerts@example.com"
-}
-```
-
 ## Alert Rules
 
 This module creates the following alert rules:
 
-1. **SFP Temperature Critical** - Alerts when SFP temperature exceeds critical threshold
-2. **SFP RX Power Low** - Alerts when RX power is below minimum threshold
-3. **SFP RX Power High** - Alerts when RX power is above maximum threshold
-4. **Interface Link Down** - Alerts when monitored interfaces go down
-5. **ONT CPU High** - Alerts when ONT CPU usage is high
-6. **ONT Memory High** - Alerts when ONT memory usage is high 
+1. **SFP Monitoring Data Source Issues** - Detects data source connectivity problems, timeouts, and evaluation delays
+2. **SFP Temperature Critical** - Alerts when SFP temperature exceeds critical threshold of 80°C (with proper value formatting)
+3. **SFP RX Power Too Low** - Alerts when RX power drops below -30.0 dBm (lower bound)
+4. **SFP RX Power Too High** - Alerts when RX power exceeds -20.0 dBm (upper bound)
+5. **SFP Data Stale** - Detects when SFP modules stop reporting fresh data
+6. **SFP Vendor Serial Changed** - Alerts on SFP module replacements or changes
+7. **Interface Link Down** - Alerts when monitored interfaces go down
+8. **ONT CPU High** - Alerts when ONT CPU usage is high
+9. **ONT PON Link Down** - Alerts when ONT loses connectivity to OLT
+
+## Alert Features
+
+- All numeric alerts include properly formatted values (e.g., "%.2f" for dBm, "%.1f" for temperature)
+- Intelligent handling of missing data and evaluation delays
+- Clear descriptions including both current values and thresholds
+- Proper interface labeling for multi-interface setups
+- Rate-based detection for certain metrics to handle missing scrapes 

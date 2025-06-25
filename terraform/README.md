@@ -16,7 +16,9 @@ terraform/
 └── modules/
     ├── folders/              # Folder organization module
     │   └── main.tf
-    ├── dashboards/           # Dashboard module
+    ├── dashboards/           # Internal dashboard module
+    │   └── main.tf
+    ├── dashboards-public/    # Public dashboard module
     │   └── main.tf
     └── alerts/               # Alerts module with submodules
         ├── main.tf           # Main alerts module
@@ -34,7 +36,7 @@ terraform/
 ### Main Configuration (`main.tf`)
 - Orchestrates the deployment of all modules
 - Defines common tags and local values
-- Calls the folders, dashboards, and alerts modules in the correct order
+- Calls the folders, dashboards, dashboards-public, and alerts modules in the correct order
 
 ### Providers (`providers.tf`)
 - Contains the Grafana Cloud provider configuration
@@ -49,9 +51,17 @@ terraform/
 - Follows Grafana best practices for organization
 
 ### Dashboards Module
-- Deploys the SFP monitoring dashboard
+- Deploys the internal SFP monitoring dashboard
 - Uses the dashboard JSON configuration file
 - Places dashboard in the SFP Monitoring folder
+- Provides full editing capabilities for administrators
+
+### Dashboards Public Module
+- Deploys the public version of the SFP monitoring dashboard
+- Creates a read-only, publicly accessible dashboard
+- Perfect for sharing with external stakeholders
+- Includes time selection and annotation features
+- No authentication required for access
 
 ### Alerts Module
 The alerts module is split into submodules for better organization, following the textbook approach:
@@ -131,12 +141,13 @@ After deployment, your Grafana instance will have:
 ```
 📁 RouterOS Monitoring
 ├── 📁 SFP Monitoring
-│   └── 📊 SFP Monitor Dashboard
+│   ├── 📊 SFP Monitor Dashboard (Internal)
+│   └── 📊 SFP Monitor Dashboard (Public)
 └── 📁 Alerts
     └── 🚨 SFP Monitoring Alerts (rule group)
 ```
 
-This structure provides clear organization and follows Grafana's recommended practices for monitoring infrastructure.
+This structure provides clear organization and follows Grafana's recommended practices for monitoring infrastructure. The internal dashboard is fully editable by administrators, while the public dashboard provides read-only access through a public URL.
 
 ## 🏗️ Architecture
 
@@ -246,9 +257,35 @@ terraform apply
 
 ## 📊 Dashboards
 
-The dashboards module creates:
+The dashboards module manages two types of dashboards:
 
-- **SFP Monitoring Dashboard**: Comprehensive monitoring dashboard with:
+### Internal Dashboard (Editable)
+- **Location**: `modules/dashboards/`
+- **Purpose**: Internal monitoring and configuration
+- **Features**:
+  - Full editing capabilities for administrators
+  - Complete control over dashboard settings
+  - Located in the SFP Monitoring folder
+  - Requires authentication to access
+  - Used for detailed analysis and configuration
+
+### Public Dashboard (Read-only)
+- **Location**: `modules/dashboards-public/`
+- **Purpose**: Sharing monitoring data with external stakeholders
+- **Features**:
+  - Read-only access for security
+  - Public URL access without authentication
+  - Simplified view for external users
+  - Time selection enabled for analysis
+  - Annotations enabled for context
+  - Perfect for sharing with vendors or support teams
+
+### Dashboard Features (Both Versions)
+- **Templating**: Interface and severity filters
+- **Thresholds**: Color-coded alerts for different values
+- **Real-time**: 30-second refresh intervals
+- **Responsive**: Adaptive layout for different screen sizes
+- **Metrics Displayed**:
   - SFP Power Levels (RX/TX)
   - SFP Temperature
   - Interface Status
@@ -258,169 +295,42 @@ The dashboards module creates:
   - Stale Data Indicator
   - OLT Information
 
-### Dashboard Features
-
-- **Templating**: Interface and severity filters
-- **Thresholds**: Color-coded alerts for different values
-- **Real-time**: 30-second refresh intervals
-- **Responsive**: Adaptive layout for different screen sizes
-
 ## 🚨 Alerts
 
 The alerts module creates comprehensive alert rules:
 
+### System Alerts
+- **SFP Monitoring Data Source Issues**: Detects connectivity problems, timeouts, and evaluation delays
+- **SFP Data Stale**: Detects when SFP modules stop reporting fresh data
+
 ### Critical Alerts
-- **SFP Interface Link Down**: Interface down for >1 minute
-- **SFP Temperature Critical**: Temperature >85°C
+- **SFP Interface Link Down**: Interface down for >1 minute (with rate-based detection)
+- **SFP Temperature Critical**: Temperature >80°C (with proper value formatting)
 - **ONT PON Link Down**: Loss of connectivity to OLT
 
 ### Warning Alerts
-- **SFP RX Power Too Low**: Below -30 dBm
-- **SFP Data Stale**: Cached power readings detected
-- **ONT CPU Usage High**: Above 80%
-- **OLT Vendor Changed**: Hardware/vendor changes detected
+- **SFP RX Power Too Low**: Below -30.0 dBm (lower bound)
+- **SFP RX Power Too High**: Above -20.0 dBm (upper bound)
+- **SFP Vendor Serial Changed**: Hardware/module changes detected
+- **ONT CPU Usage High**: Above 80% (with proper value formatting)
 
 ### Alert Features
 
+- **Value Formatting**: Proper decimal places (%.2f for dBm, %.1f for temperature)
+- **Data Source Handling**: Intelligent handling of timeouts and evaluation delays
 - **Grouping**: Alerts grouped by alertname, interface, and severity
 - **Throttling**: Configurable notification intervals
 - **Escalation**: Different policies for critical vs warning alerts
-- **Annotations**: Rich alert descriptions and context
+- **Annotations**: Rich alert descriptions with current values and thresholds
+- **Dynamic Labeling**: Proper interface labeling for multi-interface setups
+- **Rate Detection**: Rate-based detection for handling missing scrapes
 
 ## ⚙️ Configuration Options
 
 ### SFP Thresholds
-- `sfp_rx_power_low_threshold`: RX power low threshold (-30.0 dBm)
-- `sfp_rx_power_high_threshold`: RX power high threshold (-8.0 dBm)
-- `sfp_temperature_warning_threshold`: Temperature warning (70.0°C)
-- `sfp_temperature_critical_threshold`: Temperature critical (85.0°C)
+- `sfp_rx_power_low_threshold`: Lower bound RX power threshold (-30.0 dBm, more negative)
+- `sfp_rx_power_high_threshold`: Upper bound RX power threshold (-20.0 dBm, less negative)
+- `sfp_temperature_critical_threshold`: Temperature critical (80.0°C)
 
 ### ONT Thresholds
-- `ont_cpu_warning_threshold`: CPU usage warning (80.0%)
-- `ont_memory_warning_threshold`: Memory usage warning (85.0%)
-
-### Notification Settings
-- `notification_group_wait`: Initial notification delay (30s)
-- `notification_group_interval`: Group notification interval (5m)
-- `notification_repeat_interval`: Repeat notification interval (4h)
-
-## 🔧 Customization
-
-### Adding New Alerts
-
-1. Edit `modules/alerts/main.tf`
-2. Add new rule blocks to the `grafana_rule_group` resource
-3. Follow the existing pattern for data sources and conditions
-
-### Modifying Dashboards
-
-1. Edit `modules/dashboards/main.tf`
-2. Modify the `config_json` in the dashboard resource
-3. Add new panels or modify existing ones
-
-### Adding Notification Channels
-
-1. Edit the contact point in `modules/alerts/main.tf`
-2. Add new notification channels (Slack, PagerDuty, etc.)
-3. Configure the notification policy accordingly
-
-## 🔒 Security
-
-### Service Account Permissions
-
-The service account needs these Grafana Cloud permissions:
-- **Folders**: Create, Read, Write, Delete ⚠️ **Required for folder creation**
-- **Alerting**: Read/Write/Delete
-- **Metrics**: Read
-- **Dashboards**: Read/Write
-- **Annotations**: Read/Write
-
-**Note**: Folder creation permissions are essential for this deployment. Without them, you'll need to use the workaround described in the [Grafana Cloud Permissions](#2-grafana-cloud-permissions) section above.
-
-### Sensitive Data
-
-- API tokens are marked as sensitive in Terraform
-- Use environment variables or secure secret management
-- Never commit `terraform.tfvars` with real credentials
-
-## 📈 Monitoring
-
-### Terraform State
-
-- Use remote state storage (S3, Azure Storage, etc.)
-- Enable state locking for team collaboration
-- Regular state backups
-
-### Resource Tracking
-
-- All resources are tagged with environment and project
-- Use Terraform outputs to track created resources
-- Monitor resource costs and usage
-
-## 🛠️ Troubleshooting
-
-### Common Issues
-
-1. **Provider Authentication**:
-   ```bash
-   export TF_VAR_grafana_auth="your_token"
-   ```
-
-2. **Module Dependencies**:
-   ```bash
-   terraform init -upgrade
-   ```
-
-3. **State Conflicts**:
-   ```bash
-   terraform refresh
-   terraform plan
-   ```
-
-### Debugging
-
-- Enable Terraform debug logging:
-  ```bash
-  export TF_LOG=DEBUG
-  export TF_LOG_PATH=terraform.log
-  ```
-
-- Check Grafana Cloud API logs for authentication issues
-
-## 🔄 Updates and Maintenance
-
-### Updating Dashboards
-
-1. Modify the dashboard configuration
-2. Run `terraform plan` to see changes
-3. Apply with `terraform apply`
-
-### Updating Alerts
-
-1. Modify alert rules in the alerts module
-2. Test changes in a staging environment
-3. Deploy to production
-
-### Version Management
-
-- Use semantic versioning for modules
-- Tag releases in Git
-- Document breaking changes
-
-## 📚 Additional Resources
-
-- [Grafana Cloud API Documentation](https://grafana.com/docs/grafana-cloud/reference/cloud-api/)
-- [Terraform Grafana Provider](https://registry.terraform.io/providers/grafana/grafana/latest/docs)
-- [Prometheus Query Language](https://prometheus.io/docs/prometheus/latest/querying/)
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details. 
+- `

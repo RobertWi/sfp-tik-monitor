@@ -20,18 +20,24 @@ module "folders" {
 module "dashboards" {
   source = "./modules/dashboards"
   
+  folder_uid = module.folders.sfp_folder_uid
   environment = var.environment
   project_name = var.project_name
   common_tags = local.common_tags
-  folder_uid = module.folders.sfp_folder_uid
+  
+  depends_on = [module.folders]
 }
 
 module "dashboards_public" {
   source = "./modules/dashboards-public"
   
+  folder_uid = module.folders.sfp_folder_uid
+  grafana_url = var.grafana_url
   environment = var.environment
   project_name = var.project_name
   common_tags = local.common_tags
+  
+  depends_on = [module.folders]
 }
 
 module "alerts" {
@@ -42,7 +48,7 @@ module "alerts" {
   common_tags = local.common_tags
   
   # Pass alert-specific variables
-  folder_uid = module.folders.alerts_folder_uid
+  folder_uid = module.folders.sfp_folder_uid
   datasource_uid = var.datasource_uid
   alert_evaluation_interval = var.alert_evaluation_interval
   sfp_temperature_critical_threshold = var.sfp_temperature_critical_threshold

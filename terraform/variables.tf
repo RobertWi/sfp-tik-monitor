@@ -78,12 +78,13 @@ variable "sfp_rx_power_low_threshold" {
 }
 
 variable "sfp_rx_power_high_threshold" {
-  description = "SFP RX power high threshold in dBm"
+  description = "High RX power threshold for SFP modules (dBm)"
   type        = number
-  default     = -8.0
+  default     = -20.0
+
   validation {
     condition     = var.sfp_rx_power_high_threshold >= -20.0 && var.sfp_rx_power_high_threshold <= 0.0
-    error_message = "SFP RX power high threshold must be between -20.0 and 0.0 dBm"
+    error_message = "SFP RX power high threshold must be between -20.0 and 0.0 dBm."
   }
 }
 
@@ -100,7 +101,7 @@ variable "sfp_temperature_warning_threshold" {
 variable "sfp_temperature_critical_threshold" {
   description = "SFP temperature critical threshold in Celsius"
   type        = number
-  default     = 85.0
+  default     = 80.0
   validation {
     condition     = var.sfp_temperature_critical_threshold >= 70.0 && var.sfp_temperature_critical_threshold <= 95.0
     error_message = "SFP temperature critical threshold must be between 70.0 and 95.0 Celsius"
@@ -109,13 +110,9 @@ variable "sfp_temperature_critical_threshold" {
 
 # ONT Monitoring Thresholds
 variable "ont_cpu_warning_threshold" {
-  description = "ONT CPU usage warning threshold in percent"
+  description = "ONT CPU warning threshold percentage"
   type        = number
-  default     = 80.0
-  validation {
-    condition     = var.ont_cpu_warning_threshold >= 50.0 && var.ont_cpu_warning_threshold <= 95.0
-    error_message = "ONT CPU warning threshold must be between 50.0 and 95.0 percent"
-  }
+  default     = 95.0
 }
 
 variable "ont_memory_warning_threshold" {

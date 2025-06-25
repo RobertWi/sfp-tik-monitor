@@ -24,6 +24,15 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+# Cleanup function
+cleanup_old_files() {
+    print_status "Cleaning up old state and plan files..."
+    # Remove old state backups but keep the latest
+    find . -name "terraform.tfstate.[0-9]*.backup" -delete
+    # Remove old plan files
+    rm -f tfplan
+}
+
 # Check if terraform.tfvars exists
 if [ ! -f "terraform.tfvars" ]; then
     print_error "terraform.tfvars file not found!"
@@ -39,6 +48,9 @@ fi
 
 print_status "Starting Terraform deployment..."
 
+# Clean up old files first
+cleanup_old_files
+
 # Initialize Terraform
 print_status "Initializing Terraform..."
 terraform init
@@ -47,9 +59,9 @@ terraform init
 print_status "Validating Terraform configuration..."
 terraform validate
 
-# Show plan
-print_status "Showing deployment plan..."
-terraform plan
+# Show and save plan
+print_status "Creating deployment plan..."
+terraform plan -out=tfplan
 
 # Ask for confirmation
 echo
@@ -57,14 +69,20 @@ read -p "Do you want to apply this configuration? (y/N): " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     print_status "Applying Terraform configuration..."
-    terraform apply -auto-approve
+    terraform apply tfplan
     print_status "Deployment completed successfully!"
     
     # Show outputs
     echo
     print_status "Deployment outputs:"
     terraform output
+
+    # Clean up plan file after successful apply
+    print_status "Cleaning up plan file..."
+    rm -f tfplan
 else
     print_warning "Deployment cancelled by user."
+    print_status "Cleaning up plan file..."
+    rm -f tfplan
     exit 0
 fi 

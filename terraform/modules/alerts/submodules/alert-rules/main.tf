@@ -9,12 +9,14 @@ terraform {
 
 # Alert Rules
 resource "grafana_rule_group" "sfp_monitoring" {
-  name             = "SFP Monitoring Alerts"
+  name             = "SFP Monitoring Alerts v2"
   folder_uid       = var.folder_uid
   interval_seconds = var.alert_evaluation_interval
 
+
+
   rule {
-    name = "SFP Interface Link Down"
+    name = "SFP Interface Link Down v2"
     condition = "A"
     for = "2m"
     no_data_state = "OK"
@@ -27,25 +29,65 @@ resource "grafana_rule_group" "sfp_monitoring" {
       }
       datasource_uid = var.datasource_uid
       model = jsonencode({
-        expr         = "routeros_interface_link_status{job=\"mikrotik_sfp\", interface_name=\"sfp-sfpplus1\"} == 0"
+        expr = "min by(interface_name) (routeros_interface_link_status{job=\"mikrotik_sfp\"}) == 0"
+      })
+    }
+
+    labels = {
+      severity = "critical"
+      category = "interface"
+    }
+
+    annotations = {
+      summary = "Interface $${labels.interface_name} is down"
+      description = "Interface $${labels.interface_name} is reporting link status DOWN."
+    }
+  }
+
+  rule {
+    name = "SFP Temperature Critical v2"
+    condition = "A or B"
+    for = "2m"
+    no_data_state = "OK"
+    
+    data {
+      ref_id = "A"
+      relative_time_range {
+        from = 600
+        to   = 0
+      }
+      datasource_uid = var.datasource_uid
+      model = jsonencode({
+        expr = "max by(interface_name) (routeros_sfp_temperature_celsius{job=\"mikrotik_sfp\"}) > 85"
+      })
+    }
+
+    data {
+      ref_id = "B"
+      relative_time_range {
+        from = 600
+        to   = 0
+      }
+      datasource_uid = var.datasource_uid
+      model = jsonencode({
+        expr = "max by(interface_name) (zaram_ont_sfp_temperature_celsius{job=\"mikrotik_sfp\"}) > 85"
       })
     }
 
     labels = {
       severity = "critical"
       category = "sfp"
-      interface = "sfp-sfpplus1"
     }
 
     annotations = {
-      summary = "SFP interface sfp-sfpplus1 is down"
-      description = "SFP interface sfp-sfpplus1 has been down for more than 1 minute. This indicates a link failure or hardware issue."
+      summary = "Critical temperature for $${labels.interface_name}"
+      description = "SFP module temperature is $${printf \"%.1f\" $value}°C (threshold: 85°C) for interface $${labels.interface_name}."
     }
   }
 
   rule {
-    name = "SFP Temperature Critical"
-    condition = "A"
+    name = "SFP RX Power Too Low v2"
+    condition = "A or B"
     for = "2m"
     no_data_state = "OK"
     
@@ -57,55 +99,36 @@ resource "grafana_rule_group" "sfp_monitoring" {
       }
       datasource_uid = var.datasource_uid
       model = jsonencode({
-        expr         = "routeros_sfp_temperature_celsius{job=\"mikrotik_sfp\", interface_name=\"sfp-sfpplus1\"} > 85"
+        expr = "min by(interface_name) (routeros_sfp_rx_power_dbm{job=\"mikrotik_sfp\"}) < ${var.sfp_rx_power_low_threshold}"
       })
     }
 
-    labels = {
-      severity = "critical"
-      category = "sfp"
-      interface = "sfp-sfpplus1"
-    }
-
-    annotations = {
-      summary = "SFP temperature critical for sfp-sfpplus1"
-      description = "SFP module temperature is critically high ({{ $value }}°C) for interface sfp-sfpplus1. Immediate attention required."
-    }
-  }
-
-  rule {
-    name = "SFP RX Power Too Low"
-    condition = "A"
-    for = "2m"
-    no_data_state = "OK"
-    
     data {
-      ref_id = "A"
+      ref_id = "B"
       relative_time_range {
         from = 600
         to   = 0
       }
       datasource_uid = var.datasource_uid
       model = jsonencode({
-        expr         = "routeros_sfp_rx_power_dbm{job=\"mikrotik_sfp\", interface_name=\"sfp-sfpplus1\"} < -30"
+        expr = "min by(interface_name) (zaram_ont_sfp_rx_power_dbm{job=\"mikrotik_sfp\"}) < ${var.sfp_rx_power_low_threshold}"
       })
     }
 
     labels = {
       severity = "warning"
       category = "sfp"
-      interface = "sfp-sfpplus1"
     }
 
     annotations = {
-      summary = "SFP RX power too low for sfp-sfpplus1"
-      description = "SFP RX power is below threshold ({{ $value }} dBm) for interface sfp-sfpplus1. This may indicate fiber issues or signal degradation."
+      summary = "Low RX power for $${labels.interface_name}"
+      description = "SFP RX power is $${printf \"%.2f\" $value} dBm (threshold: ${var.sfp_rx_power_low_threshold} dBm) for interface $${labels.interface_name}."
     }
   }
 
   rule {
-    name = "SFP RX Power Too High"
-    condition = "A"
+    name = "SFP RX Power Too High v2"
+    condition = "A or B"
     for = "2m"
     no_data_state = "OK"
     
@@ -117,24 +140,35 @@ resource "grafana_rule_group" "sfp_monitoring" {
       }
       datasource_uid = var.datasource_uid
       model = jsonencode({
-        expr         = "routeros_sfp_rx_power_dbm{job=\"mikrotik_sfp\", interface_name=\"sfp-sfpplus1\"} > -8"
+        expr = "max by(interface_name) (routeros_sfp_rx_power_dbm{job=\"mikrotik_sfp\"}) > ${var.sfp_rx_power_high_threshold}"
+      })
+    }
+
+    data {
+      ref_id = "B"
+      relative_time_range {
+        from = 600
+        to   = 0
+      }
+      datasource_uid = var.datasource_uid
+      model = jsonencode({
+        expr = "max by(interface_name) (zaram_ont_sfp_rx_power_dbm{job=\"mikrotik_sfp\"}) > ${var.sfp_rx_power_high_threshold}"
       })
     }
 
     labels = {
       severity = "warning"
       category = "sfp"
-      interface = "sfp-sfpplus1"
     }
 
     annotations = {
-      summary = "SFP RX power too high for sfp-sfpplus1"
-      description = "SFP RX power is above threshold ({{ $value }} dBm) for interface sfp-sfpplus1. This may indicate signal overload or excessive optical power."
+      summary = "High RX power for $${labels.interface_name}"
+      description = "SFP RX power is $${printf \"%.2f\" $value} dBm (threshold: ${var.sfp_rx_power_high_threshold} dBm) for interface $${labels.interface_name}."
     }
   }
 
   rule {
-    name = "SFP Data Stale"
+    name = "SFP Data Stale v2"
     condition = "A"
     for = "2m"
     no_data_state = "OK"
@@ -147,24 +181,52 @@ resource "grafana_rule_group" "sfp_monitoring" {
       }
       datasource_uid = var.datasource_uid
       model = jsonencode({
-        expr         = "count(routeros_sfp_data_stale{job=\"mikrotik_sfp\", interface_name=\"sfp-sfpplus1\"} == 1) > 0"
+        expr = "max by(interface_name) (routeros_sfp_data_stale{job=\"mikrotik_sfp\"}) > 0"
       })
     }
 
     labels = {
       severity = "warning"
       category = "sfp"
-      interface = "sfp-sfpplus1"
     }
 
     annotations = {
-      summary = "SFP data appears stale for sfp-sfpplus1"
-      description = "SFP power readings appear to be stale/cached data for interface sfp-sfpplus1. This may indicate the SFP module is not reporting fresh data."
+      summary = "Stale SFP data for $${labels.interface_name}"
+      description = "SFP module data is stale for interface $${labels.interface_name}. This could indicate issues with SFP monitoring."
     }
   }
 
   rule {
-    name = "ONT PON Link Down"
+    name = "SFP Vendor Version Changed v2"
+    condition = "A"
+    for = "0m"
+    no_data_state = "OK"
+    
+    data {
+      ref_id = "A"
+      relative_time_range {
+        from = 3600  # 1h
+        to   = 0
+      }
+      datasource_uid = var.datasource_uid
+      model = jsonencode({
+        expr = "changes(zaram_ont_olt_version{job=\"mikrotik_sfp\"}[1h]) > 0"
+      })
+    }
+
+    labels = {
+      severity = "warning"
+      category = "sfp"
+    }
+
+    annotations = {
+      summary = "SFP module changed for $${labels.interface_name}"
+      description = "SFP module version has changed for interface $${labels.interface_name}, indicating a possible module replacement or connectivity issue."
+    }
+  }
+
+  rule {
+    name = "ONT PON Link Down v2"
     condition = "A"
     for = "2m"
     no_data_state = "OK"
@@ -177,147 +239,26 @@ resource "grafana_rule_group" "sfp_monitoring" {
       }
       datasource_uid = var.datasource_uid
       model = jsonencode({
-        expr         = "zaram_ont_pon_link_status{job=\"mikrotik_sfp\", interface_name=\"sfp-sfpplus1\"} == 0"
+        expr = "min by(interface_name) (zaram_ont_pon_link_status{job=\"mikrotik_sfp\"}) == 0"
       })
     }
 
     labels = {
       severity = "critical"
       category = "ont"
-      interface = "sfp-sfpplus1"
     }
 
     annotations = {
-      summary = "ONT PON link down for sfp-sfpplus1"
-      description = "ONT PON link is down for interface sfp-sfpplus1. This indicates loss of connectivity to the OLT."
+      summary = "PON link down for $${labels.interface_name}"
+      description = "ONT PON link is DOWN for interface $${labels.interface_name}. This indicates loss of connectivity to the OLT."
     }
   }
 
   rule {
-    name = "ONT CPU Usage High"
-    condition = "A"
-    for = "5m"
-    no_data_state = "OK"
-    
-    data {
-      ref_id = "A"
-      relative_time_range {
-        from = 600
-        to   = 0
-      }
-      datasource_uid = var.datasource_uid
-      model = jsonencode({
-        expr         = "zaram_ont_cpu_usage{job=\"mikrotik_sfp\", interface_name=\"sfp-sfpplus1\"} > 80"
-      })
-    }
-
-    labels = {
-      severity = "warning"
-      category = "ont"
-      interface = "sfp-sfpplus1"
-    }
-
-    annotations = {
-      summary = "ONT CPU usage high for sfp-sfpplus1"
-      description = "ONT CPU usage is high ({{ $value }}%) for interface sfp-sfpplus1. This may indicate performance issues."
-    }
-  }
-
-  rule {
-    name = "OLT Vendor Changed"
-    condition = "A"
-    for = "1h"
-    no_data_state = "OK"
-    
-    data {
-      ref_id = "A"
-      relative_time_range {
-        from = 7200
-        to   = 0
-      }
-      datasource_uid = var.datasource_uid
-      model = jsonencode({
-        expr         = "changes(zaram_ont_olt_vendor_id{job=\"mikrotik_sfp\", interface_name=\"sfp-sfpplus1\"}[1h]) > 0"
-      })
-    }
-
-    labels = {
-      severity = "warning"
-      category = "ont"
-      interface = "sfp-sfpplus1"
-    }
-
-    annotations = {
-      summary = "OLT vendor changed for sfp-sfpplus1"
-      description = "OLT vendor has changed for interface sfp-sfpplus1. This may indicate OLT replacement or configuration changes."
-    }
-  }
-
-  rule {
-    name = "SFP and PPPoE WAN Interfaces Down"
-    condition = "A"
-    for = "5m"
-    no_data_state = "OK"
-    
-    data {
-      ref_id = "A"
-      relative_time_range {
-        from = 600
-        to   = 0
-      }
-      datasource_uid = var.datasource_uid
-      model = jsonencode({
-        expr         = "routeros_interface_link_status{job=\"mikrotik_sfp\", interface_name=\"sfp-sfpplus1\"} == 0 and routeros_interface_link_status{job=\"mikrotik_sfp\", interface_name=\"pppoe-wan\"} == 0"
-      })
-    }
-
-    labels = {
-      severity = "critical"
-      category = "connectivity"
-      interface = "sfp-sfpplus1,pppoe-wan"
-    }
-
-    annotations = {
-      summary = "SFP and PPPoE WAN interfaces are down"
-      description = "Both the SFP interface (sfp-sfpplus1) and PPPoE WAN interface are down. This indicates a complete connectivity failure."
-    }
-  }
-
-  rule {
-    name = "PPPoE WAN Link Down"
+    name = "ONT CPU Usage High v2"
     condition = "A"
     for = "2m"
     no_data_state = "OK"
-
-    data {
-      ref_id = "A"
-      relative_time_range {
-        from = 600
-        to   = 0
-      }
-      datasource_uid = var.datasource_uid
-      model = jsonencode({
-        expr         = "routeros_interface_link_status{job=\"mikrotik_sfp\", interface_name=\"pppoe-wan\"} == 0"
-      })
-    }
-
-    labels = {
-      severity = "critical"
-      category = "wan"
-      interface = "pppoe-wan"
-    }
-
-    annotations = {
-      summary = "PPPoE WAN interface pppoe-wan is down"
-      description = "PPPoE WAN interface pppoe-wan has been down for more than 1 minute. This indicates a link failure or hardware issue."
-    }
-  }
-
-  rule {
-    name = "ONT FEC Uncorrectable Codewords High"
-    condition = "A"
-    for = "5m"
-    no_data_state = "OK"
     
     data {
       ref_id = "A"
@@ -327,79 +268,315 @@ resource "grafana_rule_group" "sfp_monitoring" {
       }
       datasource_uid = var.datasource_uid
       model = jsonencode({
-        expr         = "increase(zaram_ont_pon_fec_uncorrectable_codewords_total{job=\"mikrotik_sfp\", interface_name=\"sfp-sfpplus1\"}[5m]) > 1000"
-      })
-    }
-
-    labels = {
-      severity = "critical"
-      category = "ont"
-      interface = "sfp-sfpplus1"
-    }
-
-    annotations = {
-      summary = "High FEC uncorrectable codewords rate for sfp-sfpplus1"
-      description = "ONT FEC uncorrectable codewords are increasing rapidly ({{ $value }} in 5m) for interface sfp-sfpplus1. This indicates severe signal quality issues."
-    }
-  }
-
-  rule {
-    name = "ONT FEC Error Rate Critical"
-    condition = "A"
-    for = "5m"
-    no_data_state = "OK"
-    
-    data {
-      ref_id = "A"
-      relative_time_range {
-        from = 600
-        to   = 0
-      }
-      datasource_uid = var.datasource_uid
-      model = jsonencode({
-        expr         = "(increase(zaram_ont_pon_fec_uncorrectable_codewords_total{job=\"mikrotik_sfp\", interface_name=\"sfp-sfpplus1\"}[5m]) / increase(zaram_ont_pon_fec_total_codewords_total{job=\"mikrotik_sfp\", interface_name=\"sfp-sfpplus1\"}[5m])) * 100 > 0.1"
-      })
-    }
-
-    labels = {
-      severity = "critical"
-      category = "ont"
-      interface = "sfp-sfpplus1"
-    }
-
-    annotations = {
-      summary = "Critical FEC error rate for sfp-sfpplus1"
-      description = "ONT FEC error rate is critical ({{ $value | humanizePercentage }}) for interface sfp-sfpplus1. This indicates severe optical signal degradation."
-    }
-  }
-
-  rule {
-    name = "ONT FEC Corrected Codewords Increasing"
-    condition = "A"
-    for = "10m"
-    no_data_state = "OK"
-    
-    data {
-      ref_id = "A"
-      relative_time_range {
-        from = 1200
-        to   = 0
-      }
-      datasource_uid = var.datasource_uid
-      model = jsonencode({
-        expr         = "rate(zaram_ont_pon_fec_corrected_codewords_total{job=\"mikrotik_sfp\", interface_name=\"sfp-sfpplus1\"}[5m]) > 100"
+        expr = "max by(interface_name) (avg_over_time(zaram_ont_cpu_usage_percent{job=\"mikrotik_sfp\"}[5m])) > 95"
       })
     }
 
     labels = {
       severity = "warning"
       category = "ont"
-      interface = "sfp-sfpplus1"
     }
 
     annotations = {
-      summary = "High FEC correction rate for sfp-sfpplus1"
-      description = "ONT FEC is correcting codewords at a high rate ({{ $value }}/min) for interface sfp-sfpplus1. This indicates ongoing signal quality issues."
+      summary = "High CPU usage for $${labels.interface_name}"
+      description = "ONT CPU usage is $${printf \"%.1f\" $value}% (threshold: 95%) for interface $${labels.interface_name}. Average over 5 minutes."
+    }
+  }
+
+  rule {
+    name = "OLT Vendor Changed v2"
+    condition = "A"
+    for = "2m"
+    no_data_state = "OK"
+    
+    data {
+      ref_id = "A"
+      relative_time_range {
+        from = 600
+        to   = 0
+      }
+      datasource_uid = var.datasource_uid
+      model = jsonencode({
+        expr = "changes(zaram_ont_olt_vendor_id{job=\"mikrotik_sfp\"}[1h]) > 0"
+      })
+    }
+
+    labels = {
+      severity = "warning"
+      category = "ont"
+    }
+
+    annotations = {
+      summary = "OLT vendor changed for $${labels.interface_name}"
+      description = "OLT vendor has changed in the last hour for interface $${labels.interface_name}. This indicates a change in the upstream OLT."
+    }
+  }
+
+  rule {
+    name = "Combined SFP and WAN Interface Down v2"
+    condition = "A"
+    for = "2m"
+    no_data_state = "OK"
+    
+    data {
+      ref_id = "A"
+      relative_time_range {
+        from = 600
+        to   = 0
+      }
+      datasource_uid = var.datasource_uid
+      model = jsonencode({
+        expr = "min by(interface_name) (routeros_interface_link_status{job=\"mikrotik_sfp\", interface_name=~\"sfp.*\"}) == 0 and min by(interface_name) (routeros_interface_link_status{job=\"mikrotik_sfp\", interface_name=~\"pppoe.*\"}) == 0"
+      })
+    }
+
+    labels = {
+      severity = "critical"
+      category = "interface"
+    }
+
+    annotations = {
+      summary = "Both SFP and WAN interfaces are down"
+      description = "Both SFP and PPPoE WAN interfaces are down. This indicates a complete loss of connectivity."
+    }
+  }
+
+  rule {
+    name = "ONT FEC Corrected Codewords Increasing v2"
+    condition = "A"
+    for = "2m"
+    no_data_state = "OK"
+    
+    data {
+      ref_id = "A"
+      relative_time_range {
+        from = 600
+        to   = 0
+      }
+      datasource_uid = var.datasource_uid
+      model = jsonencode({
+        expr = "max by(interface_name) (deriv(zaram_ont_pon_fec_corrected_codewords_total{job=\"mikrotik_sfp\"}[5m])) > 100"
+      })
+    }
+
+    labels = {
+      severity = "warning"
+      category = "ont"
+    }
+
+    annotations = {
+      summary = "High FEC correction rate for $${labels.interface_name}"
+      description = "The FEC correction rate is high (> 100 codewords/sec) for interface $${labels.interface_name}, indicating potential signal quality issues."
+    }
+  }
+
+  rule {
+    name = "ONT FEC Uncorrectable Errors v2"
+    condition = "A"
+    for = "2m"
+    no_data_state = "OK"
+    
+    data {
+      ref_id = "A"
+      relative_time_range {
+        from = 600
+        to   = 0
+      }
+      datasource_uid = var.datasource_uid
+      model = jsonencode({
+        expr = "max by(interface_name) (increase(zaram_ont_pon_fec_uncorrectable_codewords_total{job=\"mikrotik_sfp\"}[5m])) > 0"
+      })
+    }
+
+    labels = {
+      severity = "critical"
+      category = "ont"
+    }
+
+    annotations = {
+      summary = "FEC uncorrectable errors detected for $${labels.interface_name}"
+      description = "ONT has detected uncorrectable FEC errors in the last 5 minutes for interface $${labels.interface_name}. This indicates severe signal quality issues that could not be corrected."
+    }
+  }
+
+  rule {
+    name = "ONT FEC Error Rate High v2"
+    condition = "A"
+    for = "2m"
+    no_data_state = "OK"
+    
+    data {
+      ref_id = "A"
+      relative_time_range {
+        from = 600
+        to   = 0
+      }
+      datasource_uid = var.datasource_uid
+      model = jsonencode({
+        expr = "max by(interface_name) (increase(zaram_ont_pon_fec_corrected_codewords_total{job=\"mikrotik_sfp\"}[5m])) / max by(interface_name) (increase(zaram_ont_pon_fec_total_codewords_total{job=\"mikrotik_sfp\"}[5m])) > 0.01"
+      })
+    }
+
+    labels = {
+      severity = "warning"
+      category = "ont"
+    }
+
+    annotations = {
+      summary = "High FEC correction rate for $${labels.interface_name}"
+      description = "ONT FEC correction rate is high (>1%) for interface $${labels.interface_name}. This indicates signal quality issues that are being corrected but could worsen."
+    }
+  }
+
+  rule {
+    name = "SFP TX Power Critical v2"
+    condition = "A or B"
+    for = "2m"
+    no_data_state = "OK"
+    
+    data {
+      ref_id = "A"
+      relative_time_range {
+        from = 600
+        to   = 0
+      }
+      datasource_uid = var.datasource_uid
+      model = jsonencode({
+        expr = "max by(interface_name) (routeros_sfp_tx_power_dbm{job=\"mikrotik_sfp\"}) > 7 or min by(interface_name) (routeros_sfp_tx_power_dbm{job=\"mikrotik_sfp\"}) < 6"
+      })
+    }
+
+    data {
+      ref_id = "B"
+      relative_time_range {
+        from = 600
+        to   = 0
+      }
+      datasource_uid = var.datasource_uid
+      model = jsonencode({
+        expr = "max by(interface_name) (zaram_ont_sfp_tx_power_dbm{job=\"mikrotik_sfp\"}) > 7 or min by(interface_name) (zaram_ont_sfp_tx_power_dbm{job=\"mikrotik_sfp\"}) < 6"
+      })
+    }
+
+    labels = {
+      severity = "critical"
+      category = "sfp"
+    }
+
+    annotations = {
+      summary = "Critical TX power for $${labels.interface_name}"
+      description = "SFP TX power is outside acceptable range (6-7 dBm) for interface $${labels.interface_name}."
+    }
+  }
+
+  rule {
+    name = "SFP Voltage Critical v2"
+    condition = "A or B"
+    for = "2m"
+    no_data_state = "OK"
+    
+    data {
+      ref_id = "A"
+      relative_time_range {
+        from = 600
+        to   = 0
+      }
+      datasource_uid = var.datasource_uid
+      model = jsonencode({
+        expr = "max by(interface_name) (routeros_sfp_voltage_volts{job=\"mikrotik_sfp\"}) > 3.5 or min by(interface_name) (routeros_sfp_voltage_volts{job=\"mikrotik_sfp\"}) < 3.1"
+      })
+    }
+
+    data {
+      ref_id = "B"
+      relative_time_range {
+        from = 600
+        to   = 0
+      }
+      datasource_uid = var.datasource_uid
+      model = jsonencode({
+        expr = "max by(interface_name) (zaram_ont_sfp_voltage_volts{job=\"mikrotik_sfp\"}) > 3.5 or min by(interface_name) (zaram_ont_sfp_voltage_volts{job=\"mikrotik_sfp\"}) < 3.1"
+      })
+    }
+
+    labels = {
+      severity = "critical"
+      category = "sfp"
+    }
+
+    annotations = {
+      summary = "Voltage out of range for $${labels.interface_name}"
+      description = "SFP voltage is $${printf \"%.2f\" $value}V (should be between 3.1-3.5V) for interface $${labels.interface_name}."
+    }
+  }
+
+  rule {
+    name = "SFP Bias Current Critical v2"
+    condition = "A or B"
+    for = "2m"
+    no_data_state = "OK"
+    
+    data {
+      ref_id = "A"
+      relative_time_range {
+        from = 600
+        to   = 0
+      }
+      datasource_uid = var.datasource_uid
+      model = jsonencode({
+        expr = "max by(interface_name) (routeros_sfp_tx_bias_current_ma{job=\"mikrotik_sfp\"}) > 20 or min by(interface_name) (routeros_sfp_tx_bias_current_ma{job=\"mikrotik_sfp\"}) < 10"
+      })
+    }
+
+    data {
+      ref_id = "B"
+      relative_time_range {
+        from = 600
+        to   = 0
+      }
+      datasource_uid = var.datasource_uid
+      model = jsonencode({
+        expr = "max by(interface_name) (zaram_ont_sfp_tx_bias_current_ma{job=\"mikrotik_sfp\"}) > 20 or min by(interface_name) (zaram_ont_sfp_tx_bias_current_ma{job=\"mikrotik_sfp\"}) < 10"
+      })
+    }
+
+    labels = {
+      severity = "critical"
+      category = "sfp"
+    }
+
+    annotations = {
+      summary = "Bias current out of range for $${labels.interface_name}"
+      description = "SFP TX bias current is $${printf \"%.2f\" $value}mA (should be between 10-20mA) for interface $${labels.interface_name}."
+    }
+  }
+
+  rule {
+    name = "ONT SerDes State Critical v2"
+    condition = "A"
+    for = "2m"
+    no_data_state = "OK"
+    
+    data {
+      ref_id = "A"
+      relative_time_range {
+        from = 600
+        to   = 0
+      }
+      datasource_uid = var.datasource_uid
+      model = jsonencode({
+        expr = "min by(interface_name) (zaram_ont_pon_serdes_state{job=\"mikrotik_sfp\"}) < 56 or min by(interface_name) (zaram_ont_pon_serdes_text_info{job=\"mikrotik_sfp\", state!=\"Very good\"}) > 0"
+      })
+    }
+
+    labels = {
+      severity = "critical"
+      category = "sfp"
+    }
+
+    annotations = {
+      summary = "Critical SerDes state for $${labels.interface_name}"
+      description = "PON SerDes state is below acceptable threshold (0x38) or not in 'Very good' state. This indicates a potential optical link issue. Please check the optical connection and consider rebooting the XGSPON module. If the issue persists, the SFP module may need replacement."
     }
   }
 }
@@ -420,7 +597,7 @@ variable "alert_evaluation_interval" {
 variable "sfp_temperature_critical_threshold" {
   description = "Critical temperature threshold for SFP modules (°C)"
   type        = number
-  default     = 70
+  default     = 80
 }
 
 variable "sfp_rx_power_low_threshold" {
@@ -436,9 +613,9 @@ variable "sfp_rx_power_high_threshold" {
 }
 
 variable "ont_cpu_warning_threshold" {
-  description = "Warning threshold for ONT CPU usage (%)"
+  description = "Warning threshold for ONT CPU usage (%). Default is 95% to match ONT specifications."
   type        = number
-  default     = 80
+  default     = 95
 }
 
 variable "datasource_uid" {

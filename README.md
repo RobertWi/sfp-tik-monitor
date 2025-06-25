@@ -248,66 +248,101 @@ To configure remote write to Grafana Cloud:
 1. **Get your Grafana Cloud credentials:**
    - Go to your Grafana Cloud stack
    - Navigate to **Configuration** → **Prometheus**
-   - Copy the **Remote Write Endpoint URL** and **Username/API Key**
 
-2. **Update the remote_write section** in your `prometheus.yml` with your actual credentials
+### 2.4 Grafana Dashboards
 
-3. **Start Prometheus:**
-   ```bash
-   # If using Docker Compose
-   docker-compose up -d
-   
-   # If using system package
-   sudo systemctl enable prometheus
-   sudo systemctl start prometheus
-   ```
+This project includes two types of dashboards managed by Terraform:
 
-### 2.4 Testing Prometheus Scraping
+1. **Internal Dashboard**: 
+   - Located in the "RouterOS Monitoring/SFP Monitoring" folder
+   - Full-featured dashboard with edit capabilities
+   - Requires authentication
+   - Contains detailed metrics and configuration options
+   - URL: https://doemijdiemetriekmaar.grafana.net/d/sfp-monitor-11/sfp-monitor-dashboard
 
-1. **Verify metrics are available:**
-   ```bash
-   curl http://yourlocalip_or_localhost:9700/metrics
-   ```
+2. **Public Dashboard**:
+   - Also located in the "RouterOS Monitoring/SFP Monitoring" folder
+   - Read-only version accessible without authentication
+   - Perfect for sharing with support teams or community members
+   - Contains essential metrics for troubleshooting
+   - URL: https://doemijdiemetriekmaar.grafana.net/public-dashboards/aepz11pasfcaof
 
-2. **Check Prometheus targets:**
-   - Open Prometheus web interface at `http://localhost:9090`
-   - Go to Status → Targets
-   - Verify the `mikrotik_sfp` target is UP
+Both dashboards are automatically deployed and managed through Terraform, ensuring consistent configuration and version control.
 
-3. **Test queries in Prometheus:**
-   ```promql
-   # Check if metrics are being collected
-   up{job="mikrotik_sfp"}
-   
-   # View SFP temperature
-   routeros_sfp_temperature_celsius
-   
-   # Check collection success rate
-   rate(sfp_monitor_collection_success[5m])
-   ```
+### 2.5 Dashboard Features
+
+Both dashboards include:
+
+- **SFP Module Metrics**:
+  - Temperature monitoring
+  - Voltage levels
+  - TX/RX power levels
+  - Bias current measurements
+
+- **PON Statistics**:
+  - Link status
+  - SerDes state
+  - FEC statistics
+  - Error counters
+
+- **Interface Status**:
+  - Link state monitoring
+  - Traffic statistics
+  - Error rates
+
+The internal dashboard additionally provides:
+- Advanced configuration options
+- Historical data analysis
+- Alert management
+- Custom annotations
 
 ## 3. Grafana Terraform Deployment
 
 This project uses Terraform to deploy Grafana Cloud dashboards and alerts. The Terraform configuration is located in the `terraform/` directory.
 
 **What Gets Deployed:**
-- **SFP Monitoring Dashboard**: Comprehensive dashboard showing optical power, temperature, voltage, PON state, and collection metrics
-- **Alert Rules**: Automated alerting for critical SFP conditions (high temperature, low optical power, connection failures)
-- **Contact Points**: Notification channels for alert delivery
-- **Notification Policies**: Alert routing and grouping rules
+- **Folder Structure**: 
+  - "RouterOS Monitoring" as the root folder
+  - "SFP Monitoring" subfolder containing dashboards and alerts
+- **Dashboards**:
+  - Internal dashboard with full monitoring capabilities
+  - Public dashboard for sharing with support teams
+- **Alert Configuration**:
+  - Alert rules group in the SFP Monitoring folder
+  - Contact points for notifications
+  - Notification policies for alert routing
 
-**ℹ️ Note:**
+**Dashboard Organization:**
+```
+📁 RouterOS Monitoring
+└── 📁 SFP Monitoring
+    ├── 📊 SFP Monitor Dashboard (Internal)
+    ├── 📊 SFP Monitor Dashboard (Public)
+    └── 🚨 SFP Monitoring Alerts (rule group)
+```
 
-**The public dashboard is intended for external sharing only (e.g., with KPN support or others). It is read-only and does NOT include any alert rules. Use the internal dashboard for your own monitoring and alerting.**
+**Dashboard Access:**
+- **Internal Dashboard**: https://doemijdiemetriekmaar.grafana.net/d/sfp-monitor-11/sfp-monitor-dashboard
+  - Full-featured with edit capabilities
+  - Requires authentication
+  - Includes alert rules and advanced features
+  
+- **Public Dashboard**: https://doemijdiemetriekmaar.grafana.net/public-dashboards/aepz11pasfcaof
+  - Read-only version
+  - No authentication required
+  - Perfect for sharing with support teams
+  - Excludes sensitive information
 
-**Dashboard Types:**
-- **Internal Dashboard**: Includes all monitoring panels and alert rules. Use this for your own monitoring and alerting needs.
-- **Public Dashboard**: A read-only version intended for sharing externally (e.g., with KPN support or others). This dashboard does not include alerts and is safe to share publicly.
+**Alert Rules:**
+- Located in the "RouterOS Monitoring/SFP Monitoring" folder
+- Contains comprehensive alert rules for SFP monitoring
+- Grouped under "SFP Monitoring Alerts" rule group
+- Includes critical conditions, warnings, and system health checks
 
 ![SFP Monitor Dashboard Example](images/grafana_dash_example.png)
-*Example of the public SFP Monitor Dashboard as deployed via Terraform*
+*Example of the SFP Monitor Dashboard as deployed via Terraform*
 
-**Example Public Dashboard**: You can see what the deployed public dashboard looks like at: [https://doemijdiemetriekmaar.grafana.net/public-dashboards/6edd09ab0c614c34a84f02e3e8794c18](https://doemijdiemetriekmaar.grafana.net/public-dashboards/6edd09ab0c614c34a84f02e3e8794c18)
+**Example Public Dashboard**: You can see what the deployed public dashboard looks like at: [https://doemijdiemetriekmaar.grafana.net/public-dashboards/70403c9943b74f8cb24f53539bf14a03](https://doemijdiemetriekmaar.grafana.net/public-dashboards/70403c9943b74f8cb24f53539bf14a03)
 
 ### 3.1 Prerequisites
 
@@ -353,10 +388,13 @@ This project uses Terraform to deploy Grafana Cloud dashboards and alerts. The T
 
 ### 3.4 What Gets Deployed
 
-- **Dashboards**: Pre-configured SFP monitoring dashboards
-- **Alert Rules**: Comprehensive alerting for SFP metrics
-- **Contact Points**: Notification channels for alerts
-- **Notification Policies**: Alert routing and grouping
+- **Dashboards**:
+  - Internal dashboard with full monitoring capabilities
+  - Public dashboard for sharing with support teams
+- **Alert Configuration**:
+  - Alert rules group in the SFP Monitoring folder
+  - Contact points for notifications
+  - Notification policies for alert routing
 
 ### 3.5 Terraform Files Structure
 
@@ -367,16 +405,33 @@ terraform/
 ├── terraform.tfvars        # Your configuration values
 ├── providers.tf            # Provider configuration
 └── modules/
-    ├── alerts/             # Alert rules and policies
-    ├── dashboards/         # Dashboard configurations
-    └── folders/            # Dashboard organization
+    ├── alerts/            # Alert rules and policies
+    │   ├── main.tf
+    │   └── submodules/
+    │       ├── alert-rules/
+    │       ├── contact-points/
+    │       └── notification-policies/
+    ├── dashboards/        # Internal dashboard configuration
+    │   ├── main.tf
+    │   └── sfp-monitor-dashboard.json
+    ├── dashboards-public/ # Public dashboard configuration
+    │   ├── main.tf
+    │   └── sfp-monitor-dashboard.json
+    └── folders/           # Folder structure configuration
+        └── main.tf
 ```
 
-**Modular Approach**: The Terraform configuration uses a modular structure to organize different components. While not strictly necessary for a simple deployment, this approach provides better structure and organization of what gets created:
-
-- **Alerts Module**: Contains all alert rules and notification policies
-- **Dashboards Module**: Contains pre-configured dashboard definitions
-- **Folders Module**: Organizes dashboards into logical folders for better navigation
+**Modular Structure:**
+- **Folders Module**: Creates and manages the folder structure
+  - RouterOS Monitoring (root folder)
+  - SFP Monitoring (dashboards subfolder)
+  - Alerts (alert rules subfolder)
+- **Dashboards Module**: Manages the internal dashboard with full features
+- **Dashboards-Public Module**: Manages the public, read-only dashboard
+- **Alerts Module**: Contains all monitoring-related configurations
+  - Alert rules for critical conditions
+  - Contact points for notifications
+  - Notification policies for alert routing
 
 ## 4. Troubleshooting
 
@@ -391,4 +446,3 @@ Logs are stored in the `logs/` directory with rotation (5 files, 1MB each).
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-

@@ -9,7 +9,7 @@ terraform {
 
 # SFP Monitoring Dashboard
 resource "grafana_dashboard" "sfp_monitoring" {
-  config_json = file("${path.module}/../../../sfp-monitor-dashboard.json")
+  config_json = file("${path.module}/sfp-monitor-dashboard.json")
   folder      = var.folder_uid
 }
 

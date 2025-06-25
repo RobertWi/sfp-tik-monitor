@@ -4,33 +4,71 @@ import logging
 import time
 import re
 import pexpect
-from typing import Dict, Optional, Any, Tuple
+from typing import Dict, Optional, Any, Tuple, TypeVar, Callable
 from datetime import datetime
+from functools import wraps
 
-from config import config
+from config import Config
 from metrics_registry import zaram_ont_metrics, collection_metrics
 
+# Type variable for generic return type
+T = TypeVar('T')
+
+def retry_on_failure(max_retries: int = 3, delay: float = 1.0) -> Callable:
+    """Decorator to retry a function on failure with exponential backoff.
+    
+    Args:
+        max_retries: Maximum number of retry attempts
+        delay: Initial delay between retries (will be exponentially increased)
+    """
+    def decorator(func: Callable[..., T]) -> Callable[..., T]:
+        @wraps(func)
+        def wrapper(*args, **kwargs) -> T:
+            last_exception = None
+            for attempt in range(max_retries):
+                try:
+                    result = func(*args, **kwargs)
+                    # For command outputs, retry if empty
+                    if isinstance(result, dict) and not any(result.values()):
+                        raise ValueError("All command outputs are empty")
+                    if isinstance(result, str) and not result.strip():
+                        raise ValueError("Command output is empty")
+                    return result
+                except Exception as e:
+                    last_exception = e
+                    if attempt < max_retries - 1:
+                        wait_time = delay * (2 ** attempt)  # Exponential backoff
+                        logging.warning(f"Attempt {attempt + 1} failed: {str(e)}. Retrying in {wait_time:.1f}s...")
+                        time.sleep(wait_time)
+            logging.error(f"All {max_retries} attempts failed. Last error: {str(last_exception)}")
+            raise last_exception
+        return wrapper
+    return decorator
 
 class ZaramONTCollector:
-    """Collector for Zaram SFP ONT module via SSH-telnet"""
-    
+    """Collector for Zaram ONT metrics"""
+
     def __init__(self):
-        self.ssh_user = config.ssh_user
-        self.ssh_host = config.ssh_host
-        self.zaram_ont_ip = config.zaram_ont_ip
-        self.zaram_ont_user = config.zaram_ont_user
-        self.zaram_ont_password = None
-        self._refresh_password()
+        """Initialize the collector"""
+        # Load config
+        config_obj = Config()
+        
+        self.interface_name = config_obj.monitored_interfaces[0]  # Use first interface
+        self.ssh_host = config_obj.ssh_host
+        self.ssh_user = config_obj.ssh_user
+        self.zaram_ont_ip = config_obj.zaram_ont_ip
+        self.zaram_ont_user = config_obj.zaram_ont_user
+        self.zaram_ont_password = config_obj.get_zaram_ont_password()
+        if not self.zaram_ont_password:
+            raise ValueError("Failed to get Zaram ONT password")
+            
+        self.logger = logging.getLogger(__name__)
+        
+        # Load OLT vendor map from config
+        self.olt_vendor_map = config_obj.olt_vendor_map
         self.last_vendor_id = None
         self.last_vendor_name = None
         self.last_olt_version = None
-    
-    def _refresh_password(self):
-        """Refresh the Zaram ONT password"""
-        self.zaram_ont_password = config.get_zaram_ont_password()
-        if not self.zaram_ont_password:
-            logging.error("Failed to get Zaram ONT password")
-            raise ValueError("Zaram ONT password not available")
     
     def collect_all_metrics(self) -> bool:
         """Collect all Zaram ONT metrics"""
@@ -81,7 +119,7 @@ class ZaramONTCollector:
             command_outputs = self._connect_and_collect_regular()
             
             if command_outputs:
-                # Process the collected data (excluding OLT vendor)
+                # Process the collected data (excluding OLT info)
                 self._process_sfp_metrics(command_outputs)
                 self._process_pon_metrics(command_outputs)
                 self._process_system_metrics(command_outputs)
@@ -106,32 +144,29 @@ class ZaramONTCollector:
         return success
 
     def collect_olt_vendor_info(self) -> bool:
-        """Collect only OLT vendor information (runs less frequently)"""
-        start_time = time.time()
-        success = False
-        
+        """Collect OLT vendor information"""
         try:
             logging.info("Collecting OLT vendor information...")
             
-            # Connect to the ONT module and collect only OLT vendor data
+            # Connect to the ONT module and collect data
             command_outputs = self._connect_and_collect_olt_vendor()
             
             if command_outputs:
-                # Process only OLT vendor info
+                # Process the collected data
                 self._process_olt_info(command_outputs)
                 
                 success = True
                 logging.info("OLT vendor information collection completed successfully")
             else:
-                logging.error("Failed to collect OLT vendor data from Zaram ONT module")
+                logging.error("Failed to collect data from Zaram ONT module")
         
         except Exception as e:
-            logging.error(f"Error collecting OLT vendor information: {e}")
+            logging.error(f"Error collecting OLT vendor information: {str(e)}")
             collection_metrics.collection_errors_total.labels(collector_type='zaram_ont', error_type='collection_error').inc()
         
         finally:
             # Update collection metrics
-            duration = time.time() - start_time
+            duration = time.time() - time.time()
             collection_metrics.collection_duration_seconds.labels(collector_type='zaram_ont').set(duration)
             collection_metrics.collection_success.labels(collector_type='zaram_ont').set(1 if success else 0)
             if success:
@@ -239,22 +274,41 @@ class ZaramONTCollector:
         
         for cmd in commands:
             try:
-                logging.info(f"Running command: {cmd}")
+                # Try up to 3 times for each command
+                max_retries = 3
+                retry_delay = 1.0  # Initial delay in seconds
                 
-                # Send the command
-                child.sendline(cmd)
-                
-                # Clear the buffer before capturing output
-                time.sleep(0.5)
-                
-                # Wait for the prompt to return - use the actual prompt format
-                i = child.expect([r'admin@ZXOS11NPI\s+\[/\]\s+#', r'ZXOS11NPI.*#', pexpect.TIMEOUT], timeout=10)
-                if i == 2:  # timeout
-                    logging.error(f"Command '{cmd}' timed out")
-                    command_outputs[cmd] = ""
-                else:
+                for attempt in range(max_retries):
+                    logging.info(f"Running command: {cmd}" + (f" (attempt {attempt + 1}/{max_retries})" if attempt > 0 else ""))
+                    
+                    # Send the command - ensure cmd is str
+                    cmd_str: str = str(cmd)
+                    child.sendline(cmd_str)
+                    
+                    # Clear the buffer before capturing output
+                    time.sleep(0.5)
+                    
+                    # Wait for the prompt to return - use the actual prompt format
+                    i = child.expect([r'admin@ZXOS11NPI\s+\[/\]\s+#', r'ZXOS11NPI.*#', pexpect.TIMEOUT], timeout=10)
+                    if i == 2:  # timeout
+                        logging.error(f"Command '{cmd}' timed out")
+                        if attempt < max_retries - 1:
+                            wait_time = retry_delay * (2 ** attempt)  # Exponential backoff
+                            logging.warning(f"Retrying in {wait_time:.1f}s...")
+                            time.sleep(wait_time)
+                            continue
+                        command_outputs[cmd] = ""
+                        break
+                    
                     # Get the output - use before which contains everything up to the prompt
-                    full_output = child.before.decode('utf-8', 'ignore')
+                    raw_output = child.before
+                    if raw_output is None:
+                        full_output = ""
+                    else:
+                        try:
+                            full_output = raw_output.decode('utf-8', 'ignore')
+                        except (AttributeError, UnicodeDecodeError):
+                            full_output = str(raw_output)
                     
                     # Remove the command from the beginning of the output
                     cmd_pattern = re.escape(cmd) + r'\s*\r?\n'
@@ -263,11 +317,20 @@ class ZaramONTCollector:
                     # Clean up the output - remove empty lines and prompt artifacts
                     cleaned_output = '\n'.join([line.strip() for line in output.split('\n') 
                                              if line.strip() and 'admin@' not in line and 'ZXOS11NPI' not in line])
-                    command_outputs[cmd] = cleaned_output
                     
+                    # Check if output is too short or just contains prompt
+                    if not cleaned_output or cleaned_output == '[/] #' or len(cleaned_output) < 10:
+                        if attempt < max_retries - 1:
+                            wait_time = retry_delay * (2 ** attempt)  # Exponential backoff
+                            logging.warning(f"Command '{cmd}' returned empty/short output. Retrying in {wait_time:.1f}s...")
+                            time.sleep(wait_time)
+                            continue
+                    
+                    command_outputs[cmd] = cleaned_output
                     logging.debug(f"Command '{cmd}' output length: {len(cleaned_output)}")
                     if cleaned_output:
                         logging.debug(f"Command '{cmd}' output: '{cleaned_output[:200]}...'")
+                    break  # Success - exit retry loop
                 
                 time.sleep(0.5)  # Small delay between commands
                 
@@ -284,7 +347,7 @@ class ZaramONTCollector:
             return
         
         sfp_output = command_outputs['sfp info']
-        interface_name = 'sfp-sfpplus1'  # Default interface name
+        interface_name = self.interface_name
         
         # Only log raw output if it's empty or very short (for debugging)
         if not sfp_output or len(sfp_output) < 10:
@@ -376,7 +439,7 @@ class ZaramONTCollector:
     
     def _process_pon_metrics(self, command_outputs: Dict[str, str]):
         """Process PON-specific metrics"""
-        interface_name = 'sfp-sfpplus1'
+        interface_name = self.interface_name
         
         # Process FEC statistics
         if 'onu show pon counter' in command_outputs:
@@ -520,8 +583,14 @@ class ZaramONTCollector:
                 serdes_hex = serdes_match.group(2)
                 serdes_value = int(serdes_hex, 16)
                 
+                # Set the numeric state value
                 zaram_ont_metrics.ont_pon_serdes_state.labels(interface_name=interface_name).set(serdes_value)
-                zaram_ont_metrics.ont_pon_serdes_text.labels(interface_name=interface_name).info({'state': serdes_text})
+                
+                # Set the text state as a gauge with value 1 for current state
+                possible_states = ["Very good", "Good", "Poor", "Error", "Failed", "Unknown"]
+                for state in possible_states:
+                    value = 1 if state == serdes_text else 0
+                    zaram_ont_metrics.ont_pon_serdes_text_state.labels(interface_name=interface_name, state=state).set(value)
                 
                 # Only log if SerDes state indicates an issue
                 if 'error' in serdes_text.lower() or 'fail' in serdes_text.lower():
@@ -529,7 +598,7 @@ class ZaramONTCollector:
             except (ValueError, TypeError) as e:
                 logging.error(f"Error parsing SerDes state: {e}")
         else:
-            logging.warning(f"Could not find SerDes state in output: '{serdes_output}'")
+            logging.warning(f"Could not find SerDes state in output: '{serdes_output}')")
     
     def _get_serdes_state_description(self, serdes_value: int) -> str:
         """Get human-readable description of SerDes state"""
@@ -545,7 +614,7 @@ class ZaramONTCollector:
     
     def _process_system_metrics(self, command_outputs: Dict[str, str]):
         """Process system metrics (CPU, memory)"""
-        interface_name = 'sfp-sfpplus1'
+        interface_name = self.interface_name
         
         # Process CPU usage
         if 'sysmon cpu' in command_outputs:
@@ -586,91 +655,64 @@ class ZaramONTCollector:
         else:
             logging.warning("No 'sysmon memory' output available")
     
-    def _process_olt_info(self, command_outputs: Dict[str, str]):
+    def _process_olt_info(self, command_outputs: Dict[str, str]) -> None:
         """Process OLT vendor information"""
         if 'onu dump ptp' not in command_outputs:
-            logging.warning("No 'onu dump ptp' output available")
+            self.logger.warning("No 'onu dump ptp' output available")
             return
+
+        output = command_outputs['onu dump ptp']
         
-        ptp_output = command_outputs['onu dump ptp']
-        interface_name = 'sfp-sfpplus1'
-        
-        # Parse vendor ID
-        vendor_id, vendor_name, version = self._parse_olt_vendor_info(ptp_output)
-        
-        if vendor_id and vendor_id != "Unknown":
-            try:
-                vendor_id_decimal = int(vendor_id.replace('0x', ''), 16)
-                
-                # Set the vendor ID metric with vendor name as a label
-                zaram_ont_metrics.ont_olt_vendor_id.labels(interface_name=interface_name, vendor_name=vendor_name).set(vendor_id_decimal)
-                
-                # Set the OLT version metric if available
-                if version:
-                    zaram_ont_metrics.ont_olt_version.labels(interface_name=interface_name, version=version).set(1)
-                
-                # Track vendor ID changes
-                if self.last_vendor_id is None:
-                    logging.info(f"Initial OLT vendor detected: {vendor_name} (ID: {vendor_id})")
-                    if version:
-                        logging.info(f"Initial OLT version detected: {version}")
-                else:
-                    if vendor_id != self.last_vendor_id:
-                        logging.warning(f"OLT Vendor ID changed from {self.last_vendor_name} ({self.last_vendor_id}) to {vendor_name} ({vendor_id})")
-                    if version and version != self.last_olt_version:
-                        logging.warning(f"OLT Version changed from {self.last_olt_version} to {version}")
-                
-                # Update tracking variables
-                self.last_vendor_id = vendor_id
-                self.last_vendor_name = vendor_name
-                if version:
-                    self.last_olt_version = version
-                    
-            except Exception as e:
-                logging.error(f"Error processing vendor ID {vendor_id}: {e}")
+        # Log raw output for debugging if it's empty or very short
+        if not output or len(output) < 10:
+            self.logger.warning(f"Raw OLT vendor info output is empty or too short: '{output}'")
+            return
         else:
-            logging.warning("Could not determine OLT vendor ID from 'onu dump ptp' output")
-    
-    def _parse_olt_vendor_info(self, ptp_output: str) -> Tuple[Optional[str], str, Optional[str]]:
-        """Parse OLT vendor information from PTP output"""
-        vendor_id = None
-        vendor_name = "Unknown"
-        version = None
+            self.logger.debug(f"Raw OLT vendor info output: {output}")
         
-        # Look for vendor ID patterns
-        vendor_patterns = [
-            r'oltVendorId\s*:\s*([0-9a-fA-F]+)',
-            r'vendor\s*id\s*:\s*(0x[0-9a-fA-F]+)',
-            r'vendor\s*:\s*(0x[0-9a-fA-F]+)',
-            r'olt\s*vendor\s*:\s*(0x[0-9a-fA-F]+)'
-        ]
-        
-        for pattern in vendor_patterns:
-            match = re.search(pattern, ptp_output, re.IGNORECASE)
-            if match:
-                vendor_id_raw = match.group(1)
-                # Add 0x prefix if not present for config lookup
-                if not vendor_id_raw.startswith('0x'):
-                    vendor_id = f"0x{vendor_id_raw}"
-                else:
-                    vendor_id = vendor_id_raw
-                vendor_name = config.olt_vendor_map.get(vendor_id, "Unknown")
-                break
-        
-        # Look for version patterns
-        version_patterns = [
-            r'version\s*:\s*([^\s\n]+)',
-            r'firmware\s*version\s*:\s*([^\s\n]+)',
-            r'olt\s*version\s*:\s*([^\s\n]+)'
-        ]
-        
-        for pattern in version_patterns:
-            match = re.search(pattern, ptp_output, re.IGNORECASE)
-            if match:
-                version = match.group(1).strip()
-                break
-        
-        return vendor_id, vendor_name, version
+        try:
+            # Extract vendor ID and version
+            vendor_id = self._extract_olt_vendor_id(output)
+            if vendor_id:
+                vendor_name = self._get_vendor_name(vendor_id)
+                zaram_ont_metrics.ont_olt_vendor_id.labels(
+                    interface_name=self.interface_name,
+                    vendor_name=vendor_name
+                ).set(vendor_id)
+            
+            # Extract version
+            version_match = re.search(r'version\s*:\s*([0-9a-fA-F]+)', output, re.IGNORECASE)
+            if version_match:
+                version = version_match.group(1)
+                zaram_ont_metrics.ont_olt_version.labels(
+                    interface_name=self.interface_name,
+                    version=version
+                ).set(1)  # Using 1 as the value since we're using the label for the actual version
+            else:
+                self.logger.warning("Could not find OLT version in output")
+            
+        except Exception as e:
+            self.logger.error(f"Error processing OLT vendor information: {str(e)}")
+            raise
+
+    def _extract_olt_vendor_id(self, output):
+        """Extract OLT vendor ID from onu dump ptp output"""
+        try:
+            # Look for vendor ID in OLT-G section
+            vendor_match = re.search(r'oltVendorId\s*:\s*([0-9a-fA-F]+)', output, re.IGNORECASE)
+            if vendor_match:
+                return int(vendor_match.group(1), 16)  # Convert hex to decimal
+            return None
+            
+        except Exception as e:
+            self.logger.error(f"Error extracting OLT vendor ID: {str(e)}")
+            return None
+
+    def _get_vendor_name(self, vendor_id):
+        """Get vendor name from vendor ID"""
+        # Convert decimal vendor_id back to hex string format
+        hex_id = f"0x{vendor_id:08x}"
+        return self.olt_vendor_map.get(hex_id, "Unknown")
 
     def _connect_and_collect_regular(self) -> Optional[Dict[str, str]]:
         """Connect to the ONT module and collect regular command outputs (excluding OLT vendor)"""
@@ -717,12 +759,12 @@ class ZaramONTCollector:
                 return None
                 
             logging.info("Sending password...")
-            if self.zaram_ont_password:
-                child.sendline(self.zaram_ont_password)
-            else:
+            if not self.zaram_ont_password:
                 logging.error("Zaram ONT password is None")
                 child.close()
                 return None
+            password: str = self.zaram_ont_password  # Type assertion
+            child.sendline(password)
             
             # Look for command prompt
             i = child.expect(['ZXOS11NPI', pexpect.TIMEOUT], timeout=5)
@@ -798,12 +840,12 @@ class ZaramONTCollector:
                 return None
                 
             logging.info("Sending password...")
-            if self.zaram_ont_password:
-                child.sendline(self.zaram_ont_password)
-            else:
+            if not self.zaram_ont_password:
                 logging.error("Zaram ONT password is None")
                 child.close()
                 return None
+            password: str = self.zaram_ont_password  # Type assertion
+            child.sendline(password)
             
             # Look for command prompt
             i = child.expect(['ZXOS11NPI', pexpect.TIMEOUT], timeout=5)
@@ -867,27 +909,18 @@ class ZaramONTCollector:
                     command_outputs[cmd] = ""
                 else:
                     # Get the output - use before which contains everything up to the prompt
-                    full_output = child.before.decode('utf-8', 'ignore') if child.before else ""
-                    
-                    # Remove the command from the beginning of the output
-                    cmd_pattern = re.escape(cmd) + r'\s*\r?\n'
-                    output = re.sub(cmd_pattern, '', full_output, count=1)
-                    
-                    # Clean up the output - remove empty lines and prompt artifacts
-                    cleaned_output = '\n'.join([line.strip() for line in output.split('\n') 
-                                             if line.strip() and 'admin@' not in line and 'ZXOS11NPI' not in line])
-                    command_outputs[cmd] = cleaned_output
-                    
-                    logging.debug(f"Command '{cmd}' output length: {len(cleaned_output)}")
-                    if cleaned_output:
-                        logging.debug(f"Command '{cmd}' output: '{cleaned_output[:200]}...'")
+                    output = child.before.decode('utf-8', 'ignore')
+                    # Remove the command from the output
+                    output = output.replace(cmd, '').strip()
+                    command_outputs[cmd] = output
                 
-                time.sleep(0.5)  # Small delay between commands
+                # Add a small delay between commands
+                time.sleep(1)
                 
             except Exception as e:
                 logging.error(f"Error running command '{cmd}': {str(e)}")
                 command_outputs[cmd] = ""
-        
+                
         return command_outputs
 
     def _run_olt_vendor_command(self, child) -> Dict[str, str]:

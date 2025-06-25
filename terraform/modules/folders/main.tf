@@ -14,14 +14,8 @@ resource "grafana_folder" "routeros_monitoring" {
 }
 
 resource "grafana_folder" "sfp_monitoring" {
-  title = "SFP Monitoring Private"
+  title = "SFP Monitoring"
   uid   = "sfp-20250623"
-  parent_folder_uid = grafana_folder.routeros_monitoring.uid
-}
-
-resource "grafana_folder" "alerts" {
-  title = "SFP Monitoring Alerts"
-  uid   = "alerts-20250623"
   parent_folder_uid = grafana_folder.routeros_monitoring.uid
 }
 
@@ -52,16 +46,10 @@ output "sfp_folder_uid" {
   value       = grafana_folder.sfp_monitoring.uid
 }
 
-output "alerts_folder_uid" {
-  description = "UID of the Alerts folder"
-  value       = grafana_folder.alerts.uid
-}
-
 output "folder_urls" {
   description = "URLs of created folders"
   value = {
     routeros = grafana_folder.routeros_monitoring.url
     sfp      = grafana_folder.sfp_monitoring.url
-    alerts   = grafana_folder.alerts.url
   }
 } 

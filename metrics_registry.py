@@ -223,8 +223,8 @@ class ZaramONTMetrics:
     
     # Direct SFP module readings
     ont_sfp_temperature = Gauge(
-        'zaram_ont_sfp_temperature_celsius', 
-        'ONT SFP temperature in Celsius from direct telnet session', 
+        'zaram_ont_sfp_temperature_celsius',
+        'ONT SFP temperature in Celsius from direct telnet session',
         ['interface_name']
     )
     
@@ -295,6 +295,12 @@ class ZaramONTMetrics:
         ['interface_name']
     )
     
+    ont_pon_serdes_text_state = Gauge(
+        'zaram_ont_pon_serdes_text_state', 
+        'PON SerDes state text description as gauge (1=current state, 0=other states)', 
+        ['interface_name', 'state']
+    )
+    
     ont_pon_link_status = Gauge(
         'zaram_ont_pon_link_status', 
         'PON link status (1=UP, 0=DOWN)', 
@@ -328,14 +334,15 @@ class ZaramONTMetrics:
     
     # OLT information
     ont_olt_vendor_id = Gauge(
-        'zaram_ont_olt_vendor_id', 
-        'OLT Vendor ID (hex as decimal)', 
+        'zaram_ont_olt_vendor_id',
+        'OLT Vendor ID (hex as decimal)',
         ['interface_name', 'vendor_name']
     )
-    
+
+    # OLT version from OLT-G section
     ont_olt_version = Gauge(
-        'zaram_ont_olt_version', 
-        'OLT Firmware Version', 
+        'zaram_ont_olt_version',
+        'OLT version from OLT-G section',
         ['interface_name', 'version']
     )
     
