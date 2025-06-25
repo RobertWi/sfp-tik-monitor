@@ -105,9 +105,9 @@ For secure SSH access to the router (required to then use telnet from RouterOS t
 
 ### 1.2 Environment Configuration
 
-1. **Copy the example environment file:**
+1. **Create the environment file:**
    ```bash
-   cp .env.example .env
+   touch .env
    ```
 
 2. **Edit the environment configuration:**
@@ -115,16 +115,25 @@ For secure SSH access to the router (required to then use telnet from RouterOS t
    vi .env
    ```
 
-   Update the following variables with your specific values:
+   Add the following variables with your specific values:
    ```bash
    # Router configuration
-   ROUTER_HOST=your-router-ip
-   ROUTER_USER=your-router-user
+   ROUTER_HOST=your-router-ip          # IP address of your Mikrotik router
+   ROUTER_USER=your-router-user        # API user created in RouterOS
+   ROUTER_PASSWORD=your-router-pass    # API user password
    
-   # Zaram SFP telnet
-   SFP_IP=192.168.200.1
-   SFP_USER=admin
- 
+   # Zaram SFP telnet configuration
+   SFP_IP=192.168.200.1               # Default IP of Zaram SFP module
+   SFP_USER=admin                      # Default telnet username
+   SFP_PASSWORD=admin                  # Default telnet password
+   
+   # Prometheus metrics configuration
+   METRICS_PORT=9700                   # Port to expose Prometheus metrics
+   COLLECTION_INTERVAL=30              # Metrics collection interval in seconds
+   
+   # Logging configuration
+   LOG_LEVEL=INFO                      # Logging level (DEBUG, INFO, WARNING, ERROR)
+   LOG_FILE=logs/sfp_monitor.log       # Path to log file
    ```
 
 ### 1.3 Service Setup and Verification
