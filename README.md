@@ -342,7 +342,7 @@ This project uses Terraform to deploy Grafana Cloud dashboards and alerts. The T
 ![SFP Monitor Dashboard Example](images/grafana_dash_example.png)
 *Example of the SFP Monitor Dashboard as deployed via Terraform*
 
-**Example Public Dashboard**: You can see what the deployed public dashboard looks like at: [https://doemijdiemetriekmaar.grafana.net/public-dashboards/70403c9943b74f8cb24f53539bf14a03](https://doemijdiemetriekmaar.grafana.net/public-dashboards/70403c9943b74f8cb24f53539bf14a03)
+**Example Public Dashboard**: You can see what the deployed public dashboard looks like at: [https://doemijdiemetriekmaar.grafana.net/public-dashboards/01ed5b84ea1a409f8a901d3fc35f1aa0](https://doemijdiemetriekmaar.grafana.net/public-dashboards/01ed5b84ea1a409f8a901d3fc35f1aa0)
 
 ### 3.1 Prerequisites
 
