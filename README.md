@@ -38,6 +38,7 @@ For users with their own ONT, the [Tweakers community](https://gathering.tweaker
 - **Performance Optimization**: Identify and resolve performance bottlenecks
 - **Cost Avoidance**: Demonstrate that issues are not on your end
 - **Support Documentation**: Provide concrete data to support teams who may lack experience with custom ONT hardware
+- **Live Dashboard**: View a [live example dashboard](https://rebrand.ly/kpn-sfp-dash) to see the monitoring in action
 
 ## Features
 
@@ -339,6 +340,9 @@ This project uses Terraform to deploy Grafana Cloud dashboards and alerts. The T
 
 ![SFP Monitor Dashboard Example](images/grafana_dash_example.png)
 *Example of the SFP Monitor Dashboard as deployed via Terraform*
+
+[![Live SFP Monitor Dashboard](https://img.shields.io/badge/View-Live_Dashboard-2ea44f)](https://rebrand.ly/kpn-sfp-dash)
+*Click the badge above to view the live SFP Monitor Dashboard*
 
 ### 3.1 Prerequisites
 
