@@ -145,6 +145,8 @@ class ZaramONTCollector:
 
     def collect_olt_vendor_info(self) -> bool:
         """Collect OLT vendor information"""
+        success = False
+        start_time = time.time()
         try:
             logging.info("Collecting OLT vendor information...")
             
@@ -166,7 +168,7 @@ class ZaramONTCollector:
         
         finally:
             # Update collection metrics
-            duration = time.time() - time.time()
+            duration = time.time() - start_time
             collection_metrics.collection_duration_seconds.labels(collector_type='zaram_ont').set(duration)
             collection_metrics.collection_success.labels(collector_type='zaram_ont').set(1 if success else 0)
             if success:

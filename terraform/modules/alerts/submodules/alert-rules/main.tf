@@ -9,14 +9,14 @@ terraform {
 
 # Alert Rules
 resource "grafana_rule_group" "sfp_monitoring" {
-  name             = "SFP Monitoring Alerts v2"
+  name             = "SFP Monitoring Alerts"
   folder_uid       = var.folder_uid
   interval_seconds = var.alert_evaluation_interval
 
 
 
   rule {
-    name = "SFP Interface Link Down v2"
+    name = "SFP Interface Link Down"
     condition = "A"
     for = "2m"
     no_data_state = "OK"
@@ -45,7 +45,7 @@ resource "grafana_rule_group" "sfp_monitoring" {
   }
 
   rule {
-    name = "SFP Temperature Critical v2"
+    name = "SFP Temperature Critical"
     condition = "A or B"
     for = "2m"
     no_data_state = "OK"
@@ -86,7 +86,7 @@ resource "grafana_rule_group" "sfp_monitoring" {
   }
 
   rule {
-    name = "SFP RX Power Too Low v2"
+    name = "SFP RX Power Too Low"
     condition = "A or B"
     for = "2m"
     no_data_state = "OK"
@@ -127,7 +127,7 @@ resource "grafana_rule_group" "sfp_monitoring" {
   }
 
   rule {
-    name = "SFP RX Power Too High v2"
+    name = "SFP RX Power Too High"
     condition = "A or B"
     for = "2m"
     no_data_state = "OK"
@@ -168,7 +168,7 @@ resource "grafana_rule_group" "sfp_monitoring" {
   }
 
   rule {
-    name = "SFP Data Stale v2"
+    name = "SFP Data Stale"
     condition = "A"
     for = "2m"
     no_data_state = "OK"
@@ -197,7 +197,7 @@ resource "grafana_rule_group" "sfp_monitoring" {
   }
 
   rule {
-    name = "SFP Vendor Version Changed v2"
+    name = "SFP Vendor Version Changed"
     condition = "A"
     for = "0m"
     no_data_state = "OK"
@@ -226,7 +226,7 @@ resource "grafana_rule_group" "sfp_monitoring" {
   }
 
   rule {
-    name = "ONT PON Link Down v2"
+    name = "ONT PON Link Down"
     condition = "A"
     for = "2m"
     no_data_state = "OK"
@@ -254,37 +254,10 @@ resource "grafana_rule_group" "sfp_monitoring" {
     }
   }
 
-  rule {
-    name = "ONT CPU Usage High v2"
-    condition = "A"
-    for = "2m"
-    no_data_state = "OK"
-    
-    data {
-      ref_id = "A"
-      relative_time_range {
-        from = 600
-        to   = 0
-      }
-      datasource_uid = var.datasource_uid
-      model = jsonencode({
-        expr = "max by(interface_name) (avg_over_time(zaram_ont_cpu_usage_percent{job=\"mikrotik_sfp\"}[5m])) > 95"
-      })
-    }
-
-    labels = {
-      severity = "warning"
-      category = "ont"
-    }
-
-    annotations = {
-      summary = "High CPU usage for $${labels.interface_name}"
-      description = "ONT CPU usage is $${printf \"%.1f\" $value}% (threshold: 95%) for interface $${labels.interface_name}. Average over 5 minutes."
-    }
-  }
+  
 
   rule {
-    name = "OLT Vendor Changed v2"
+    name = "OLT Vendor Changed"
     condition = "A"
     for = "2m"
     no_data_state = "OK"
@@ -313,7 +286,7 @@ resource "grafana_rule_group" "sfp_monitoring" {
   }
 
   rule {
-    name = "Combined SFP and WAN Interface Down v2"
+    name = "Combined SFP and WAN Interface Down"
     condition = "A"
     for = "2m"
     no_data_state = "OK"
@@ -342,7 +315,7 @@ resource "grafana_rule_group" "sfp_monitoring" {
   }
 
   rule {
-    name = "ONT FEC Corrected Codewords Increasing v2"
+    name = "ONT FEC Corrected Codewords Increasing"
     condition = "A"
     for = "2m"
     no_data_state = "OK"
@@ -371,7 +344,7 @@ resource "grafana_rule_group" "sfp_monitoring" {
   }
 
   rule {
-    name = "ONT FEC Uncorrectable Errors v2"
+    name = "ONT FEC Uncorrectable Errors"
     condition = "A"
     for = "2m"
     no_data_state = "OK"
@@ -400,7 +373,7 @@ resource "grafana_rule_group" "sfp_monitoring" {
   }
 
   rule {
-    name = "ONT FEC Error Rate High v2"
+    name = "ONT FEC Error Rate High"
     condition = "A"
     for = "2m"
     no_data_state = "OK"
@@ -429,7 +402,7 @@ resource "grafana_rule_group" "sfp_monitoring" {
   }
 
   rule {
-    name = "SFP TX Power Critical v2"
+    name = "SFP TX Power Critical"
     condition = "A or B"
     for = "2m"
     no_data_state = "OK"
@@ -470,7 +443,7 @@ resource "grafana_rule_group" "sfp_monitoring" {
   }
 
   rule {
-    name = "SFP Voltage Critical v2"
+    name = "SFP Voltage Critical"
     condition = "A or B"
     for = "2m"
     no_data_state = "OK"
@@ -511,7 +484,7 @@ resource "grafana_rule_group" "sfp_monitoring" {
   }
 
   rule {
-    name = "SFP Bias Current Critical v2"
+    name = "SFP Bias Current Critical"
     condition = "A or B"
     for = "2m"
     no_data_state = "OK"
@@ -552,7 +525,7 @@ resource "grafana_rule_group" "sfp_monitoring" {
   }
 
   rule {
-    name = "ONT SerDes State Critical v2"
+    name = "ONT SerDes State Critical"
     condition = "A"
     for = "2m"
     no_data_state = "OK"

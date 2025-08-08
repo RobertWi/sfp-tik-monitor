@@ -38,7 +38,6 @@ For users with their own ONT, the [Tweakers community](https://gathering.tweaker
 - **Performance Optimization**: Identify and resolve performance bottlenecks
 - **Cost Avoidance**: Demonstrate that issues are not on your end
 - **Support Documentation**: Provide concrete data to support teams who may lack experience with custom ONT hardware
-- **Live Dashboard**: View a [live example dashboard](https://rebrand.ly/kpn-sfp-dash) to see the monitoring in action
 
 ## Features
 
